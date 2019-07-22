@@ -1,19 +1,3 @@
-// This file is a part of the IncludeOS unikernel - www.includeos.org
-//
-// Copyright 2018 IncludeOS AS, Oslo, Norway
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 #ifndef UTIL_DETAIL_ALLOC_PMR
 #define UTIL_DETAIL_ALLOC_PMR
 
@@ -253,9 +237,7 @@ class Pmr_pool : public std::enable_shared_from_this<Pmr_pool>,
 
 namespace os::mem
 {
-//
 // Pmr_pool implementatino (PIMPL wrapper)
-//
 std::size_t Pmr_pool::total_capacity()
 {
 	return impl->total_capacity();
@@ -315,9 +297,7 @@ bool Pmr_pool::empty()
 	return impl->empty();
 }
 
-//
 // Pmr_resource implementation
-//
 Pmr_resource::Pmr_resource(Pool_ptr p) : pool_{ p }
 {
 }

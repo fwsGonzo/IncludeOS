@@ -1,18 +1,3 @@
-// This file is a part of the IncludeOS unikernel - www.includeos.org
-//
-// Copyright 2018 IncludeOS AS, Oslo, Norway
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 
 #ifndef OS_HPP
 #define OS_HPP
@@ -37,9 +22,7 @@ const char *version() noexcept;
  **/
 const char *cmdline_args() noexcept;
 
-//
 // Control flow
-//
 
 /** Block for a while, e.g. until the next round in the event loop **/
 void block() noexcept;
@@ -63,9 +46,7 @@ void reboot() noexcept;
 /** Power off system **/
 void shutdown() noexcept;
 
-//
 // Time
-//
 
 /** Clock cycles since boot. **/
 inline uint64_t cycles_since_boot() noexcept;
@@ -79,9 +60,7 @@ uint64_t cycles_asleep() noexcept;
 /** Time spent sleeping (halt) in nanoseconds **/
 uint64_t nanos_asleep() noexcept;
 
-//
 // Panic
-//
 
 /** Trigger unrecoverable error and output diagnostics **/
 __attribute__((noreturn)) void panic(const char *why) noexcept;
@@ -100,9 +79,7 @@ void on_panic(on_panic_func);
 // using Plugin      = delegate<void()>;
 // using Span_mods   = gsl::span<multiboot_module_t>;
 
-//
 // Print
-//
 
 using print_func = delegate<void(const char *, size_t)>;
 
@@ -127,16 +104,12 @@ void print_backtrace() noexcept;
 /** Print current callstack using provided print function */
 void print_backtrace(void (*print_func)(const char *, size_t)) noexcept;
 
-//
 // Memory
-//
 
 /** Total used memory, including reserved areas */
 size_t total_memuse() noexcept;
 
-//
 // Kernel modules, plugins
-//
 struct Module {
 	uint32_t mod_start;
 	uint32_t mod_end;
@@ -158,9 +131,7 @@ using Plugin = delegate<void()>;
  **/
 void register_plugin(Plugin delg, const char *name);
 
-//
 // HAL - portable hardware representation
-//
 
 class Machine;
 Machine &machine() noexcept;

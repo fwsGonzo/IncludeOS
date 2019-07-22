@@ -17,7 +17,6 @@ set(SRCS
     terminal.cpp
     timers.cpp
     threads.cpp
-    #tls.cpp
     rng.cpp
     vga.cpp
     context.cpp

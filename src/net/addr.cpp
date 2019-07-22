@@ -1,4 +1,3 @@
-
 #include <net/addr.hpp>
 
 // Initialization of static addresses.
