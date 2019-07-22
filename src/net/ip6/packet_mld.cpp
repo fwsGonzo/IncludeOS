@@ -4,23 +4,25 @@
 #else
 #define PRINT(fmt, ...) /* fmt */
 
-#include <vector>
-#include <net/ip6/packet_mld.hpp>
 #include <net/ip6/packet_icmp6.hpp>
+#include <net/ip6/packet_mld.hpp>
 #include <statman>
+#include <vector>
 
 namespace net::mld
 {
-  MldPacket2::MldPacket2(icmp6::Packet& icmp6) : icmp6_(icmp6) {}
-
-  MldPacket2::Query& MldPacket2::query()
-  {
-    return *reinterpret_cast<Query*>(&(icmp6_.header().payload[0]));
-  }
-
-  MldPacket2::Report& MldPacket2::report()
-  {
-    return *reinterpret_cast<Report*>(&(icmp6_.header().payload[0]));
-  }
+MldPacket2::MldPacket2(icmp6::Packet &icmp6) : icmp6_(icmp6)
+{
 }
+
+MldPacket2::Query &MldPacket2::query()
+{
+	return *reinterpret_cast<Query *>(&(icmp6_.header().payload[0]));
+}
+
+MldPacket2::Report &MldPacket2::report()
+{
+	return *reinterpret_cast<Report *>(&(icmp6_.header().payload[0]));
+}
+} // namespace net::mld
 #endif

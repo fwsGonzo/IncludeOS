@@ -15,21 +15,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <malloc.h>
 #include <errno.h>
+#include <malloc.h>
 
 extern "C" {
-int posix_memalign(void **memptr, size_t alignment, size_t size) {
+int posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+	if (alignment < sizeof(void *))
+		return EINVAL;
 
-  if (alignment < sizeof(void*))
-    return EINVAL;
+	auto ptr = memalign(alignment, size);
 
-  auto ptr =  memalign(alignment, size);
+	if (!ptr)
+		return errno;
 
-  if (! ptr)
-    return errno;
-
-  *memptr = ptr;
-  return 0;
+	*memptr = ptr;
+	return 0;
 };
 }

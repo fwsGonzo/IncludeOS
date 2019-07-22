@@ -26,30 +26,29 @@
 
 #include <array>
 
-namespace medic{
-  namespace diag
-  {
+namespace medic
+{
+namespace diag
+{
+	void init_tls();
+	bool timers();
+	bool elf();
+	bool virtmem();
+	bool tls();
+	bool exceptions();
+	bool stack();
 
-    void init_tls();
-    bool timers();
-    bool elf();
-    bool virtmem();
-    bool tls();
-    bool exceptions();
-    bool stack();
+	class Error : public std::runtime_error {
+	    public:
+		using std::runtime_error::runtime_error;
+		Error() : std::runtime_error("This is not a drill")
+		{ /* TODO: Verify TLS */
+		}
+	};
 
-    class Error : public std::runtime_error {
-    public:
-      using std::runtime_error::runtime_error;
-      Error()
-        : std::runtime_error("This is not a drill")
-      {  /* TODO: Verify TLS */ }
-    };
+	const int bufsize = 1024;
+	using Tl_bss_arr = std::array<char, bufsize>;
+	using Tl_data_arr = std::array<int, 256>;
 
-
-    const int bufsize = 1024;
-    using Tl_bss_arr  = std::array<char, bufsize>;
-    using Tl_data_arr = std::array<int, 256>;
-
-  }
-}
+} // namespace diag
+} // namespace medic

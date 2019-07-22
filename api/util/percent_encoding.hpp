@@ -15,7 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 ///
 /// URI encode/decode (percent encoding) module
 ///
@@ -42,8 +41,8 @@
 #include "detail/string_view"
 #include <string>
 
-namespace uri {
-
+namespace uri
+{
 ///
 /// Encode (percent-encode) a view of data representing a uri
 ///
@@ -54,24 +53,23 @@ std::string encode(util::csview input);
 ///
 std::string decode(util::csview input);
 
-
 #ifdef URI_THROW_ON_ERROR
 #include <stdexcept>
 
 struct Decode_error : public std::runtime_error {
-  using runtime_error::runtime_error;
+	using runtime_error::runtime_error;
 };
 
 struct Encode_error : public std::runtime_error {
-  using runtime_error::runtime_error;
+	using runtime_error::runtime_error;
 };
 
 struct Hex_error : public Decode_error {
-  using Decode_error::Decode_error;
+	using Decode_error::Decode_error;
 };
 
 #endif //< URI_THROW_ON_ERROR
 
-} //< namespace uri
+} // namespace uri
 
 #endif //< PERCENT_ENCODING_HPP

@@ -21,8 +21,8 @@
 
 namespace x86
 {
-  struct Clocks {
-    static void init();
-    static util::KHz  get_khz();
-  };
-}
+struct Clocks {
+	static void init();
+	static util::KHz get_khz();
+};
+} // namespace x86

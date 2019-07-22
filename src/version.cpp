@@ -19,6 +19,7 @@
 #include <version.h>
 #endif
 
-const char* os::version() noexcept {
-  return OS_VERSION;
+const char *os::version() noexcept
+{
+	return OS_VERSION;
 }

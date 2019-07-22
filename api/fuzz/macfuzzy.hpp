@@ -6,6 +6,6 @@
 //  "`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'
 #pragma once
 #include "fuzzy_helpers.hpp"
-#include "fuzzy_stack.hpp"
 #include "fuzzy_packet.hpp"
+#include "fuzzy_stack.hpp"
 //#include "fuzzy_stream.hpp"

@@ -15,64 +15,66 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <service>
-#include <net/interfaces>
-#include <net/dhcp/dhcpd.hpp>
 #include <list>
+#include <net/dhcp/dhcpd.hpp>
+#include <net/interfaces>
+#include <service>
 
 std::unique_ptr<net::dhcp::DHCPD> server;
 
-void Service::start(const std::string&)
+void Service::start(const std::string &)
 {
-  using namespace net;
-  using namespace dhcp;
+	using namespace net;
+	using namespace dhcp;
 
-  // Server
+	// Server
 
-  auto& inet = Interfaces::get(0);
-  inet.network_config(
-    { 10,0,0,9 },     // IP
-    { 255,255,255,0 },  // Netmask
-    { 10,0,0,1 },       // Gateway
-    { 8,8,8,8 });       // DNS
+	auto &inet = Interfaces::get(0);
+	inet.network_config({ 10, 0, 0, 9 }, // IP
+			    { 255, 255, 255, 0 }, // Netmask
+			    { 10, 0, 0, 1 }, // Gateway
+			    { 8, 8, 8, 8 }); // DNS
 
-  IP4::addr pool_start{10,0,0,10};
-  IP4::addr pool_end{10,0,0,20};
-  server = std::make_unique<DHCPD>(inet.udp(), pool_start, pool_end);
+	IP4::addr pool_start{ 10, 0, 0, 10 };
+	IP4::addr pool_end{ 10, 0, 0, 20 };
+	server = std::make_unique<DHCPD>(inet.udp(), pool_start, pool_end);
 
-  // Client 1
+	// Client 1
 
-  Interfaces::get(1).negotiate_dhcp(10.0, [] (bool timeout) {
-    if (timeout) {
-      printf("Client 1 timed out\n");
-    }
-    else {
-      INFO("DHCP test", "Client 1 got IP from IncludeOS DHCP server");
-      printf("%s\n", Interfaces::get(1).ip_addr().str().c_str());
-    }
-  });
+	Interfaces::get(1).negotiate_dhcp(10.0, [](bool timeout) {
+		if (timeout) {
+			printf("Client 1 timed out\n");
+		} else {
+			INFO("DHCP test",
+			     "Client 1 got IP from IncludeOS DHCP server");
+			printf("%s\n",
+			       Interfaces::get(1).ip_addr().str().c_str());
+		}
+	});
 
-  // Client 2
+	// Client 2
 
-  Interfaces::get(2).negotiate_dhcp(10.0, [] (bool timeout) {
-    if (timeout) {
-      printf("Client 2 timed out\n");
-    }
-    else {
-      INFO("DHCP test", "Client 2 got IP from IncludeOS DHCP server");
-      printf("%s\n", Interfaces::get(2).ip_addr().str().c_str());
-    }
-  });
+	Interfaces::get(2).negotiate_dhcp(10.0, [](bool timeout) {
+		if (timeout) {
+			printf("Client 2 timed out\n");
+		} else {
+			INFO("DHCP test",
+			     "Client 2 got IP from IncludeOS DHCP server");
+			printf("%s\n",
+			       Interfaces::get(2).ip_addr().str().c_str());
+		}
+	});
 
-  // Client 3
+	// Client 3
 
-  Interfaces::get(3).negotiate_dhcp(10.0, [] (bool timeout) {
-    if (timeout) {
-      printf("Client 3 timed out\n");
-    }
-    else {
-      INFO("DHCP test", "Client 3 got IP from IncludeOS DHCP server");
-      printf("%s\n", Interfaces::get(3).ip_addr().str().c_str());
-    }
-  });
+	Interfaces::get(3).negotiate_dhcp(10.0, [](bool timeout) {
+		if (timeout) {
+			printf("Client 3 timed out\n");
+		} else {
+			INFO("DHCP test",
+			     "Client 3 got IP from IncludeOS DHCP server");
+			printf("%s\n",
+			       Interfaces::get(3).ip_addr().str().c_str());
+		}
+	});
 }

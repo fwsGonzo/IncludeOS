@@ -35,5 +35,4 @@ void timer_stop();
 }
 #endif
 
-
 #endif //AARCH64TIMER

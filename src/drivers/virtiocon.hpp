@@ -43,65 +43,62 @@
  *
  **/
 
-class VirtioCon : public Virtio
-{
-public:
-  std::string device_name() const {
-    return "virtiocon" + std::to_string(m_index);
-  }
+class VirtioCon : public Virtio {
+    public:
+	std::string device_name() const
+	{
+		return "virtiocon" + std::to_string(m_index);
+	}
 
-  // returns the sizes of this console
-  size_t rows() const noexcept
-  {
-    return config.rows;
-  }
-  size_t cols() const noexcept
-  {
-    return config.cols;
-  }
+	// returns the sizes of this console
+	size_t rows() const noexcept
+	{
+		return config.rows;
+	}
+	size_t cols() const noexcept
+	{
+		return config.cols;
+	}
 
-  void write (const void* data, size_t len);
+	void write(const void *data, size_t len);
 
-  /** Constructor. @param pcidev an initialized PCI device. */
-  VirtioCon(hw::PCI_Device& pcidev);
+	/** Constructor. @param pcidev an initialized PCI device. */
+	VirtioCon(hw::PCI_Device &pcidev);
 
-private:
-  struct console_config
-  {
-    uint16_t cols;
-    uint16_t rows;
-    uint32_t max_nr_ports;
-    uint32_t emerg_wr;
-  };
+    private:
+	struct console_config {
+		uint16_t cols;
+		uint16_t rows;
+		uint32_t max_nr_ports;
+		uint32_t emerg_wr;
+	};
 
-  struct console_control
-  {
-    uint32_t id;   // port number, but lets call it id so we need a comment to explain what it is :)
-    uint16_t event;
-    uint16_t value;
-  };
+	struct console_control {
+		uint32_t id; // port number, but lets call it id so we need a comment to explain what it is :)
+		uint16_t event;
+		uint16_t value;
+	};
 
-  struct console_resize
-  {
-    uint16_t cols;
-    uint16_t rows;
-  };
+	struct console_resize {
+		uint16_t cols;
+		uint16_t rows;
+	};
 
-  /** Get virtio PCI config. @see Virtio::get_config.*/
-  void get_config();
+	/** Get virtio PCI config. @see Virtio::get_config.*/
+	void get_config();
 
-  void event_handler();
-  void msix_recv_handler();
-  void msix_xmit_handler();
+	void event_handler();
+	void msix_recv_handler();
+	void msix_xmit_handler();
 
-  Virtio::Queue rx;     // 0
-  Virtio::Queue tx;     // 1
-  Virtio::Queue ctl_rx; // 2
-  Virtio::Queue ctl_tx; // 3
+	Virtio::Queue rx; // 0
+	Virtio::Queue tx; // 1
+	Virtio::Queue ctl_rx; // 2
+	Virtio::Queue ctl_tx; // 3
 
-  // configuration as read from paravirtual PCI device
-  console_config config;
-  const int m_index = 0;
+	// configuration as read from paravirtual PCI device
+	console_config config;
+	const int m_index = 0;
 };
 
 #endif

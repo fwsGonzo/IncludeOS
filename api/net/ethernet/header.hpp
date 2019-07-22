@@ -19,42 +19,54 @@
 #ifndef NET_ETHERNET_HEADER_HPP
 #define NET_ETHERNET_HEADER_HPP
 
-#include <hw/mac_addr.hpp>
 #include "ethertype.hpp"
+#include <hw/mac_addr.hpp>
 
-namespace net {
-namespace ethernet {
+namespace net
+{
+namespace ethernet
+{
+	using trailer_t = uint32_t;
 
-using trailer_t = uint32_t;
+	class Header {
+		MAC::Addr dest_;
+		MAC::Addr src_;
+		Ethertype type_;
 
-class Header {
+	    public:
+		const MAC::Addr &dest() const noexcept
+		{
+			return dest_;
+		}
 
-  MAC::Addr dest_;
-  MAC::Addr src_;
-  Ethertype type_;
+		const MAC::Addr &src() const noexcept
+		{
+			return src_;
+		}
 
-public:
-  const MAC::Addr& dest() const noexcept
-  { return dest_; }
+		Ethertype type() const noexcept
+		{
+			return type_;
+		}
 
-  const MAC::Addr& src() const noexcept
-  { return src_; }
+		void set_dest(const MAC::Addr &dest)
+		{
+			dest_ = dest;
+		}
 
-  Ethertype type() const noexcept
-  { return type_; }
+		void set_src(const MAC::Addr &src)
+		{
+			src_ = src;
+		}
 
-  void set_dest(const MAC::Addr& dest)
-  { dest_ = dest; }
+		void set_type(Ethertype t)
+		{
+			type_ = t;
+		}
 
-  void set_src(const MAC::Addr& src)
-  { src_ = src; }
+	} __attribute__((packed));
 
-  void set_type(Ethertype t)
-  { type_ = t; }
-
-} __attribute__((packed)) ;
-
-}
-}
+} // namespace ethernet
+} // namespace net
 
 #endif

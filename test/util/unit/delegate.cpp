@@ -20,61 +20,64 @@
 
 #include <string>
 
-struct count_ctor
-{
+struct count_ctor {
 	size_t copy_count = 0;
 	size_t move_count = 0;
 
-	explicit count_ctor() {}
+	explicit count_ctor()
+	{
+	}
 
-	count_ctor(const count_ctor& other) :
-		copy_count(other.copy_count + 1),
-		move_count(other.move_count)
-	{}
+	count_ctor(const count_ctor &other)
+		: copy_count(other.copy_count + 1), move_count(other.move_count)
+	{
+	}
 
-	count_ctor(count_ctor&& other) :
-		copy_count(other.copy_count),
-		move_count(other.move_count + 1)
-	{}
+	count_ctor(count_ctor &&other)
+		: copy_count(other.copy_count), move_count(other.move_count + 1)
+	{
+	}
 };
 
-struct count_ctor_wrap
-{
+struct count_ctor_wrap {
 	count_ctor cc;
-	explicit count_ctor_wrap() {};
+	explicit count_ctor_wrap(){};
 
-	count_ctor foo(count_ctor arg) { return arg; }
+	count_ctor foo(count_ctor arg)
+	{
+		return arg;
+	}
 };
 
-struct user_closure
-{
+struct user_closure {
 	int cap_val;
 
-	explicit user_closure(int c) :
-		cap_val(c)
-	{}
+	explicit user_closure(int c) : cap_val(c)
+	{
+	}
 
-	user_closure(const user_closure&) = default;
-	user_closure(user_closure&&) = default;
+	user_closure(const user_closure &) = default;
+	user_closure(user_closure &&) = default;
 
-	int operator() (int& arg)
+	int operator()(int &arg)
 	{
 		arg += cap_val;
 		return arg++;
 	}
 
-	int operator() ()
+	int operator()()
 	{
 		return cap_val;
 	}
 };
 
-class user_class
-{
-public:
+class user_class {
+    public:
 	using del_t = delegate<int(int)>;
 
-	explicit user_class(int val) : val_(val) {}
+	explicit user_class(int val) : val_(val)
+	{
+	}
 
 	int foo(int a)
 	{
@@ -88,14 +91,21 @@ public:
 
 	del_t get_del()
 	{
-		return{ this, &user_class::foo };
+		return { this, &user_class::foo };
 	}
-private:
+
+    private:
 	int val_;
 };
 
-const std::string f1() { return "f1"; }
-const std::string f2() { return "f2"; }
+const std::string f1()
+{
+	return "f1";
+}
+const std::string f2()
+{
+	return "f2";
+}
 
 CASE("A delegate can be compared to nullptr")
 {
@@ -117,15 +127,19 @@ CASE("A delegate can be copy assigned with a different closure type")
 	using func_t = std::function<int(void)>;
 	using del_t = delegate<int(void), spec::inplace, sizeof(func_t)>;
 
-	struct copy_closure
-	{
+	struct copy_closure {
 		int cap_val;
-		explicit copy_closure(int c) : cap_val(c) {}
+		explicit copy_closure(int c) : cap_val(c)
+		{
+		}
 
-		copy_closure(const copy_closure&) = default;
-		copy_closure(copy_closure&&) = default;
+		copy_closure(const copy_closure &) = default;
+		copy_closure(copy_closure &&) = default;
 
-		int operator() () { return cap_val; }
+		int operator()()
+		{
+			return cap_val;
+		}
 	};
 
 	int cap_val = 3;
@@ -155,10 +169,9 @@ CASE("A delegate can swap values with another delegate")
 
 CASE("A delegate can be constructed with a generic lambda")
 {
-	using del_t = delegate<void(int&)>;
+	using del_t = delegate<void(int &)>;
 
-	auto test = [&lest_env](del_t& del)
-	{
+	auto test = [&lest_env](del_t &del) {
 		EXPECT(static_cast<bool>(del));
 
 		int start_val = 3;
@@ -168,7 +181,7 @@ CASE("A delegate can be constructed with a generic lambda")
 		EXPECT(val == start_val + 1);
 	};
 
-	del_t del_a = [](auto& i) { ++i; };
+	del_t del_a = [](auto &i) { ++i; };
 
 	del_t del_b;
 	del_b = del_a;
@@ -223,13 +236,13 @@ CASE("A delegate can be moved")
 
 	size_t ret = del_b();
 	EXPECT(ret == v.size());
-  EXPECT_NOT(del_a);
+	EXPECT_NOT(del_a);
 
-  user_class usr(1);
-  auto usr_del = usr.get_del();
-  EXPECT(usr_del);
-  auto usr_del2 = std::move(usr_del);
-  EXPECT_NOT(usr_del);
+	user_class usr(1);
+	auto usr_del = usr.get_del();
+	EXPECT(usr_del);
+	auto usr_del2 = std::move(usr_del);
+	EXPECT_NOT(usr_del);
 }
 
 CASE("A delegate can be constructed with a class member function pointer")
@@ -249,11 +262,10 @@ CASE("A delegate can be const")
 {
 	using del_t = const delegate<int()>;
 
-  int default_val = 7;
-  auto const_test = [lest_env, default_val](del_t del) mutable
-	{
+	int default_val = 7;
+	auto const_test = [lest_env, default_val](del_t del) mutable {
 		int ret = del();
-    EXPECT(ret == default_val);
+		EXPECT(ret == default_val);
 	};
 
 	const_test([]() { return 7; });
@@ -269,8 +281,7 @@ CASE("The delegate operator() uses correct argument type forwarding")
 {
 	using del_t = delegate<count_ctor(count_ctor)>;
 
-  auto test_arg_fwd = [lest_env](del_t del) mutable
-	{
+	auto test_arg_fwd = [lest_env](del_t del) mutable {
 		auto cc_a = del(count_ctor{});
 		EXPECT(cc_a.copy_count == 0);
 		EXPECT(cc_a.move_count <= 3);
@@ -288,8 +299,8 @@ CASE("The delegate operator() uses correct argument type forwarding")
 
 	int val = 3;
 	test_arg_fwd(del_t{ [](count_ctor arg) { return arg; } });
-  test_arg_fwd(del_t{ [val](count_ctor arg) { return arg; } });
-  test_arg_fwd(del_t{ [&val](count_ctor arg) { return arg; } });
+	test_arg_fwd(del_t{ [val](count_ctor arg) { return arg; } });
+	test_arg_fwd(del_t{ [&val](count_ctor arg) { return arg; } });
 
 	count_ctor_wrap ccw{};
 	test_arg_fwd(del_t{ ccw, &count_ctor_wrap::foo });
@@ -314,13 +325,13 @@ CASE("A delegate can be constructed with a mutable lambda")
 
 CASE("A delegate can be constructed with any valid closure type")
 {
-	using func_t = std::function<int(int&)>;
-	using del_t = delegate<int(int&), spec::inplace, sizeof(func_t)>;
+	using func_t = std::function<int(int &)>;
+	using del_t = delegate<int(int &), spec::inplace, sizeof(func_t)>;
 
 	int default_val = 3;
 	int inc_val = 4;
-  auto test_closure = [lest_env, default_val, inc_val](del_t del) mutable
-	{
+	auto test_closure = [lest_env, default_val,
+			     inc_val](del_t del) mutable {
 		int val = default_val;
 		int ret = del(val);
 
@@ -328,45 +339,50 @@ CASE("A delegate can be constructed with any valid closure type")
 		EXPECT(val == default_val + inc_val + 1);
 	};
 
-	auto lam = [inc_val](int& arg) { arg += inc_val; return arg++; };
+	auto lam = [inc_val](int &arg) {
+		arg += inc_val;
+		return arg++;
+	};
 
 	test_closure(lam);
 	test_closure(func_t{ lam });
 	test_closure(user_closure{ inc_val });
 
-	struct move_only_closure
-	{
-		explicit move_only_closure() {}
+	struct move_only_closure {
+		explicit move_only_closure()
+		{
+		}
 
-		move_only_closure(const move_only_closure&) = delete;
-		move_only_closure(move_only_closure&&) = default;
+		move_only_closure(const move_only_closure &) = delete;
+		move_only_closure(move_only_closure &&) = default;
 
-		int operator() (int&) { return 3; };
+		int operator()(int &)
+		{
+			return 3;
+		};
 	};
 
 	// this should not compile
-	//del_t impossible{ move_only_closure{} };
+	// del_t impossible{ move_only_closure{} };
 }
 
 CASE("A delegate properly destroys its closure")
 {
 	using del_t = delegate<int(int)>;
 
-	struct dtor_closure
-	{
+	struct dtor_closure {
 		bool active;
-		bool& empty;
+		bool &empty;
 
-		explicit dtor_closure(bool& arg) :
-			active(false),
-			empty(arg)
-		{}
+		explicit dtor_closure(bool &arg) : active(false), empty(arg)
+		{
+		}
 
-		dtor_closure(const dtor_closure&) = default;
-		dtor_closure(dtor_closure&&) = default;
+		dtor_closure(const dtor_closure &) = default;
+		dtor_closure(dtor_closure &&) = default;
 
-		dtor_closure& operator= (const dtor_closure&) = default;
-		dtor_closure& operator= (dtor_closure&&) = default;
+		dtor_closure &operator=(const dtor_closure &) = default;
+		dtor_closure &operator=(dtor_closure &&) = default;
 
 		~dtor_closure()
 		{
@@ -374,7 +390,7 @@ CASE("A delegate properly destroys its closure")
 				empty = true;
 		}
 
-		int operator() (int arg)
+		int operator()(int arg)
 		{
 			active = true;
 			return arg;
@@ -403,11 +419,11 @@ CASE("A delegate can be constructed with any argument reference type")
 	int ret_a = del_a(default_val);
 	EXPECT(ret_a == default_val);
 
-	delegate<int(int&)> del_b{ [](int& arg) { return arg; } };
+	delegate<int(int &)> del_b{ [](int &arg) { return arg; } };
 	int ret_b = del_b(default_val);
 	EXPECT(ret_b == default_val);
 
-	delegate<int(int&&)> del_c{ [](int&& arg) { return arg; } };
+	delegate<int(int &&)> del_c{ [](int &&arg) { return arg; } };
 	int ret_c = del_c(std::move(default_val));
 	EXPECT(ret_c == default_val);
 }
@@ -434,7 +450,7 @@ CASE("A delegate can be true or false (bool operator overload) and when it is re
 {
 	GIVEN("A default initialized delegate")
 	{
-		delegate<void(const char* s)> d{};
+		delegate<void(const char *s)> d{};
 
 		THEN("The delegate is false")
 		{
@@ -444,7 +460,7 @@ CASE("A delegate can be true or false (bool operator overload) and when it is re
 
 		THEN("The delegate can be assigned")
 		{
-			d = [](const char* s) { printf("String: %s", s); };
+			d = [](const char *s) { printf("String: %s", s); };
 			EXPECT(d);
 		}
 
@@ -468,15 +484,12 @@ CASE("A delegate can be true or false (bool operator overload) and when it is re
 
 		try {
 			nofunc();
-		}
-		catch (std::bad_function_call&) {
+		} catch (std::bad_function_call &) {
 			// Calling a zero-initialized std::function throws - so should delegates;
 			// this should be std::bad_function_call but we need modules to only import
 			// the exception from header <functional>
 			EXPECT_THROWS_AS(dnull(), std::bad_function_call);
-		}
-		catch (...)
-		{
+		} catch (...) {
 			EXPECT((false && "something terrible happend"));
 		}
 	}

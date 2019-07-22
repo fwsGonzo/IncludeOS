@@ -14,122 +14,126 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdexcept>
 #include <cstdlib>
 #include <os>
+#include <stdexcept>
 
 #include "fieldmedic.hpp"
 
-namespace medic {
-namespace diag {
+namespace medic
+{
+namespace diag
+{
+	thread_local std::array<char, diag::bufsize> __tl_bss;
+	thread_local std::array<int, 256> __tl_data{
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+		42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42
+	};
 
-  thread_local std::array<char, diag::bufsize> __tl_bss;
-  thread_local std::array<int, 256> __tl_data {
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42};
+	static void verify_tls()
+	{
+		int correct = 0;
+		for (auto &c : __tl_bss) {
+			if (c == '!')
+				correct++;
+		}
 
+		for (auto &i : __tl_data) {
+			if (i == 42)
+				correct++;
+		}
 
-  static void verify_tls() {
-    int correct = 0;
-    for (auto& c : __tl_bss) {
-      if (c == '!') correct++;
-    }
+		auto expected = diag::bufsize + __tl_data.size();
+		if (correct != expected)
+			throw Error("TLS not initialized correctly");
+	}
 
-    for (auto& i : __tl_data) {
-      if (i == 42) correct++;
-    }
+	static int stack_check(int N)
+	{
+		std::array<char, diag::bufsize> frame_arr;
+		memset(frame_arr.data(), '!', diag::bufsize);
 
-    auto expected =  diag::bufsize + __tl_data.size();
-    if (correct != expected)
-      throw Error("TLS not initialized correctly");
-  }
+		static volatile int random1 = rand();
+		if (N) {
+			volatile int local = N;
+			volatile auto res = stack_check(N - 1);
+			Expects(res == random1 + N - 1);
+		}
 
-  static int stack_check(int N)
-  {
-    std::array<char, diag::bufsize> frame_arr;
-    memset(frame_arr.data(), '!', diag::bufsize);
+		verify_tls();
 
-    static volatile int random1 = rand();
-    if (N) {
-      volatile int local = N;
-      volatile auto res = stack_check(N - 1);
-      Expects (res == random1 + N - 1);
-    }
+		for (auto &c : frame_arr) {
+			Expects(c == '!');
+		}
 
-    verify_tls();
+		return random1 + N;
+	}
 
-    for (auto &c : frame_arr) {
-      Expects(c == '!');
-    }
+	template <typename Err> static volatile int throw_at(volatile int N)
+	{
+		std::array<char, diag::bufsize> frame_arr;
+		memset(frame_arr.data(), '!', diag::bufsize);
 
-    return random1 + N;
-  }
+		if (N) {
+			volatile int i = throw_at<Err>(N - 1);
+		}
 
-  template <typename Err>
-  static volatile int throw_at(volatile int N) {
-    std::array<char, diag::bufsize> frame_arr;
-    memset(frame_arr.data(), '!', diag::bufsize);
+		bool ok = true;
+		verify_tls();
 
-    if (N) {
-      volatile int i = throw_at<Err>(N - 1);
-    }
+		for (auto &c : frame_arr) {
+			if (c != '!')
+				ok = false;
+			Expects(c == '!');
+		}
 
-    bool ok = true;
-    verify_tls();
+		if (ok)
+			throw Err();
 
-    for (auto &c : frame_arr) {
-      if (c != '!') ok = false;
-      Expects(c == '!');
-    }
+		return -1;
+	}
 
-    if (ok)
-      throw Err();
+	bool exceptions()
+	{
+		tls();
 
-    return -1;
-  }
+		try {
+			throw_at<Error>(100);
+		} catch (const Error &e) {
+			tls();
+			return true;
+		}
 
-  bool exceptions()
-  {
-    tls();
+		return false;
+	}
 
-    try {
-      throw_at<Error>(100);
-    }
-    catch (const Error& e)
-    {
-      tls();
-      return true;
-    }
+	void init_tls()
+	{
+		memset(__tl_bss.data(), '!', diag::bufsize);
+	}
 
-    return false;
-  }
+	bool stack()
+	{
+		tls();
 
-  void init_tls(){
-    memset(__tl_bss.data(), '!', diag::bufsize);
-  }
+		auto check1 = stack_check(10);
+		auto check2 = stack_check(100);
+		return check1 == check2 - 90;
+	}
 
-  bool stack()
-  {
-    tls();
-
-    auto check1 = stack_check(10);
-    auto check2 = stack_check(100);
-    return check1 == check2 - 90;
-  }
-
-}
-}
+} // namespace diag
+} // namespace medic

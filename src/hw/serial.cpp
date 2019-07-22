@@ -22,99 +22,110 @@ using namespace hw;
 
 // Storage for port numbers
 constexpr uint16_t Serial::PORTS[];
-constexpr uint8_t  Serial::IRQS[];
+constexpr uint8_t Serial::IRQS[];
 
-void Serial::init(uint16_t port_) {
-  hw::outb(port_ + 1, 0x00);    // Disable all interrupts
-  hw::outb(port_ + 3, 0x80);    // Enable DLAB (set baud rate divisor)
-  hw::outb(port_ + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
-  hw::outb(port_ + 1, 0x00);    //                  (hi byte)
-  hw::outb(port_ + 3, 0x03);    // 8 bits, no parity, one stop bit
-  hw::outb(port_ + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
-  hw::outb(port_ + 4, 0x0B);    // IRQs enabled, RTS/DSR set
-}
-
-Serial::Serial(int port) :
-  port_(port < 5 ? PORTS[port-1] : 0),
-  irq_(IRQS[port-1])
+void Serial::init(uint16_t port_)
 {
-  static bool initialized = false;
-  if (!initialized) {
-    initialized = true;
-    init();
-  }
+	hw::outb(port_ + 1, 0x00); // Disable all interrupts
+	hw::outb(port_ + 3, 0x80); // Enable DLAB (set baud rate divisor)
+	hw::outb(port_ + 0, 0x03); // Set divisor to 3 (lo byte) 38400 baud
+	hw::outb(port_ + 1, 0x00); //                  (hi byte)
+	hw::outb(port_ + 3, 0x03); // 8 bits, no parity, one stop bit
+	hw::outb(port_ + 2,
+		 0xC7); // Enable FIFO, clear them, with 14-byte threshold
+	hw::outb(port_ + 4, 0x0B); // IRQs enabled, RTS/DSR set
 }
 
-void Serial::print_handler(const char* str, size_t len) {
-  for(size_t i = 0; i < len; ++i)
-      this->write(str[i]);
+Serial::Serial(int port)
+	: port_(port < 5 ? PORTS[port - 1] : 0), irq_(IRQS[port - 1])
+{
+	static bool initialized = false;
+	if (!initialized) {
+		initialized = true;
+		init();
+	}
 }
 
-void Serial::on_data(on_data_handler del) {
-  enable_interrupt();
-  on_data_ = del;
-  INFO("Serial", "Subscribing to data on IRQ %i",irq_);
-  Events::get().subscribe(irq_, {this, &Serial::irq_handler_});
-  __arch_enable_legacy_irq(irq_);
+void Serial::print_handler(const char *str, size_t len)
+{
+	for (size_t i = 0; i < len; ++i)
+		this->write(str[i]);
 }
 
-void Serial::on_readline(on_string_handler del, char delim) {
-  newline = delim;
-  on_readline_ = del;
-  on_data({this, &Serial::readline_handler_});
-  debug("<Serial::on_readline> Subscribing to data %i \n", irq_);
+void Serial::on_data(on_data_handler del)
+{
+	enable_interrupt();
+	on_data_ = del;
+	INFO("Serial", "Subscribing to data on IRQ %i", irq_);
+	Events::get().subscribe(irq_, { this, &Serial::irq_handler_ });
+	__arch_enable_legacy_irq(irq_);
 }
 
-void Serial::enable_interrupt() {
-  outb(port_ + 1, 0x01);
+void Serial::on_readline(on_string_handler del, char delim)
+{
+	newline = delim;
+	on_readline_ = del;
+	on_data({ this, &Serial::readline_handler_ });
+	debug("<Serial::on_readline> Subscribing to data %i \n", irq_);
 }
 
-void Serial::disable_interrupt() {
-  outb(port_ + 1, 0x00);
+void Serial::enable_interrupt()
+{
+	outb(port_ + 1, 0x01);
 }
 
-char Serial::read() {
-  return hw::inb(port_);
+void Serial::disable_interrupt()
+{
+	outb(port_ + 1, 0x00);
 }
 
-void Serial::write(char c) {
-  while (is_transmit_empty() == 0);
-  hw::outb(port_, c);
+char Serial::read()
+{
+	return hw::inb(port_);
 }
 
-int Serial::received() {
-  return hw::inb(port_ + 5) & 1;
+void Serial::write(char c)
+{
+	while (is_transmit_empty() == 0)
+		;
+	hw::outb(port_, c);
 }
 
-int Serial::is_transmit_empty() {
-  return hw::inb(port_ + 5) & 0x20;
+int Serial::received()
+{
+	return hw::inb(port_ + 5) & 1;
 }
 
-void Serial::irq_handler_ () {
-
-  while (received())
-    on_data_(read());
-
+int Serial::is_transmit_empty()
+{
+	return hw::inb(port_ + 5) & 0x20;
 }
 
-void Serial::readline_handler_ (char c) {
+void Serial::irq_handler_()
+{
+	while (received())
+		on_data_(read());
+}
 
-  if (c != newline) {
-    buf.append(1, c);
-    write(c);
-    return;
-  }
+void Serial::readline_handler_(char c)
+{
+	if (c != newline) {
+		buf.append(1, c);
+		write(c);
+		return;
+	}
 
 #ifdef DEBUG
-  for ( auto& ch : buf )
-    debug(" 0x%x | ", ch);
+	for (auto &ch : buf)
+		debug(" 0x%x | ", ch);
 #endif
 
-  // Call the event handler
-  on_readline_(buf);
-  buf.clear();
+	// Call the event handler
+	on_readline_(buf);
+	buf.clear();
 }
 
-void Serial::EOT() {
-  outb(PORTS[0], 0x4);
+void Serial::EOT()
+{
+	outb(PORTS[0], 0x4);
 }

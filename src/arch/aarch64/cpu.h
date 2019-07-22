@@ -4,10 +4,10 @@
 
 #include <stdint.h>
 
-#define EL0               0
-#define EL1               1
-#define EL2               2
-#define EL3               3
+#define EL0 0
+#define EL1 1
+#define EL2 2
+#define EL3 3
 
 /*
 //exception flags ?
@@ -23,7 +23,6 @@ enum class cpu_irq_flag_t: uint32_t
 #if defined(__cplusplus)
 extern "C" {
 #endif
-
 
 void cpu_fiq_enable();
 
@@ -57,6 +56,5 @@ void set_tpidr(void *self);
 #if defined(__cplusplus)
 }
 #endif
-
 
 #endif //CPU_H

@@ -18,169 +18,156 @@
 #define OS_HPP
 
 //#include <hal/machine.hpp>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <delegate>
 #include <gsl/gsl>
 
-namespace os {
+namespace os
+{
+/** @returns the name of the CPU architecture for which the OS was built */
+const char *arch() noexcept;
 
-  /** @returns the name of the CPU architecture for which the OS was built */
-  const char* arch() noexcept;
+/** @returns IncludeOS verison identifier */
+const char *version() noexcept;
 
-  /** @returns IncludeOS verison identifier */
-  const char* version() noexcept;
+/**
+ * Returns the parameters passed, to the system at boot time.
+ * The first argument is always the binary name.
+ **/
+const char *cmdline_args() noexcept;
 
-  /**
-   * Returns the parameters passed, to the system at boot time.
-   * The first argument is always the binary name.
-   **/
-  const char* cmdline_args() noexcept;
+//
+// Control flow
+//
 
-  //
-  // Control flow
-  //
+/** Block for a while, e.g. until the next round in the event loop **/
+void block() noexcept;
 
-  /** Block for a while, e.g. until the next round in the event loop **/
-  void block() noexcept;
+/** Enter the main event loop.  Trigger subscribed and triggerd events */
+void event_loop();
 
-  /** Enter the main event loop.  Trigger subscribed and triggerd events */
-  void event_loop();
+/** Have we booted up or are we resuming */
+bool is_booted() noexcept;
+/**
+ *  Halt until next event.
+ *
+ *  @Warning If there is no regular timer interrupt (i.e. from PIT / APIC)
+ *  we'll stay asleep.
+ */
+void halt() noexcept;
 
-  /** Have we booted up or are we resuming */
-  bool is_booted() noexcept;
-  /**
-   *  Halt until next event.
-   *
-   *  @Warning If there is no regular timer interrupt (i.e. from PIT / APIC)
-   *  we'll stay asleep.
-   */
-  void halt() noexcept;
+/** Full system reboot **/
+void reboot() noexcept;
 
-  /** Full system reboot **/
-  void reboot() noexcept;
+/** Power off system **/
+void shutdown() noexcept;
 
-  /** Power off system **/
-  void shutdown() noexcept;
+//
+// Time
+//
 
+/** Clock cycles since boot. **/
+inline uint64_t cycles_since_boot() noexcept;
 
-  //
-  // Time
-  //
+/** Nanoseconds since boot converted from cycles **/
+inline uint64_t nanos_since_boot() noexcept;
 
-  /** Clock cycles since boot. **/
-  inline uint64_t cycles_since_boot() noexcept;
+/** Time spent sleeping (halt) in cycles **/
+uint64_t cycles_asleep() noexcept;
 
-  /** Nanoseconds since boot converted from cycles **/
-  inline uint64_t nanos_since_boot() noexcept;
+/** Time spent sleeping (halt) in nanoseconds **/
+uint64_t nanos_asleep() noexcept;
 
-  /** Time spent sleeping (halt) in cycles **/
-  uint64_t cycles_asleep() noexcept;
+//
+// Panic
+//
 
-  /** Time spent sleeping (halt) in nanoseconds **/
-  uint64_t nanos_asleep() noexcept;
+/** Trigger unrecoverable error and output diagnostics **/
+__attribute__((noreturn)) void panic(const char *why) noexcept;
 
+/** Default behavior after panic **/
+enum class Panic_action { halt, reboot, shutdown };
 
-  //
-  // Panic
-  //
+Panic_action panic_action() noexcept;
+void set_panic_action(Panic_action action) noexcept;
 
-  /** Trigger unrecoverable error and output diagnostics **/
-  __attribute__((noreturn))
-  void panic(const char* why) noexcept;
+typedef void (*on_panic_func)(const char *);
 
-  /** Default behavior after panic **/
-  enum class Panic_action {
-    halt, reboot, shutdown
-  };
+/** The on_panic handler will be called directly after a panic if possible.**/
+void on_panic(on_panic_func);
 
+// using Plugin      = delegate<void()>;
+// using Span_mods   = gsl::span<multiboot_module_t>;
 
-  Panic_action panic_action() noexcept;
-  void set_panic_action(Panic_action action) noexcept;
+//
+// Print
+//
 
-  typedef void (*on_panic_func) (const char*);
+using print_func = delegate<void(const char *, size_t)>;
 
-  /** The on_panic handler will be called directly after a panic if possible.**/
-  void on_panic(on_panic_func);
+/**  Write data to standard out callbacks **/
+void print(const char *ptr, const size_t len);
 
-  //using Plugin      = delegate<void()>;
-  //using Span_mods   = gsl::span<multiboot_module_t>;
+/** Add handler for standard output **/
+void add_stdout(print_func func);
 
+/** The OS default stdout handler. TODO: try to remove me */
+void default_stdout(const char *, size_t);
 
-  //
-  // Print
-  //
+/**
+ *  Enable or disable automatic prepension of
+ *  timestamps to all os::print calls
+ */
+void print_timestamps(bool enabled);
 
-  using print_func  = delegate<void(const char*, size_t)>;
+/** Print current call stack **/
+void print_backtrace() noexcept;
 
-  /**  Write data to standard out callbacks **/
-  void print(const char* ptr, const size_t len);
+/** Print current callstack using provided print function */
+void print_backtrace(void (*print_func)(const char *, size_t)) noexcept;
 
-  /** Add handler for standard output **/
-  void add_stdout(print_func func);
+//
+// Memory
+//
 
-  /** The OS default stdout handler. TODO: try to remove me */
-  void default_stdout(const char*, size_t);
+/** Total used memory, including reserved areas */
+size_t total_memuse() noexcept;
 
-  /**
-   *  Enable or disable automatic prepension of
-   *  timestamps to all os::print calls
-   */
-  void print_timestamps(bool enabled);
+//
+// Kernel modules, plugins
+//
+struct Module {
+	uint32_t mod_start;
+	uint32_t mod_end;
+	uint32_t params;
+	uint32_t pad;
+};
 
-  /** Print current call stack **/
-  void print_backtrace() noexcept;
+using Span_mods = gsl::span<Module>;
+Span_mods modules();
 
-  /** Print current callstack using provided print function */
-  void print_backtrace(void(*print_func)(const char*, size_t)) noexcept;
+using Plugin = delegate<void()>;
+/**
+ * Register a custom initialization function. The provided delegate is
+ * guaranteed to be called after global constructors and device initialization
+ * and before Service::start, provided that this funciton was called by a
+ * global constructor.
+ * @param delg : A delegate to be called
+ * @param name : A human readable identifier
+ **/
+void register_plugin(Plugin delg, const char *name);
 
+//
+// HAL - portable hardware representation
+//
 
-  //
-  // Memory
-  //
+class Machine;
+Machine &machine() noexcept;
 
-  /** Total used memory, including reserved areas */
-  size_t total_memuse() noexcept;
-
-
-
-  //
-  // Kernel modules, plugins
-  //
-  struct Module {
-    uint32_t mod_start;
-    uint32_t mod_end;
-    uint32_t params;
-    uint32_t pad;
-  };
-
-  using Span_mods = gsl::span<Module>;
-  Span_mods modules();
-
-  using Plugin = delegate<void()>;
-  /**
-   * Register a custom initialization function. The provided delegate is
-   * guaranteed to be called after global constructors and device initialization
-   * and before Service::start, provided that this funciton was called by a
-   * global constructor.
-   * @param delg : A delegate to be called
-   * @param name : A human readable identifier
-  **/
-  void register_plugin(Plugin delg, const char* name);
-
-
-  //
-  // HAL - portable hardware representation
-  //
-
-  class Machine;
-  Machine& machine() noexcept;
-
-
-}
+} // namespace os
 
 // Inline implementation details
 #include <detail/os.hpp>
-
 
 #endif // OS_HPP

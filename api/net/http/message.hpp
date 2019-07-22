@@ -23,183 +23,185 @@
 #include "header.hpp"
 #include "time.hpp"
 
-namespace http {
-
+namespace http
+{
 ///
 /// This is the base class of an HTTP message which contain
 /// the headers and optional body
 ///
 class Message {
-private:
-  ///
-  /// Internal class type aliases
-  ///
-  using Message_body   = std::string;
-public:
-  ///
-  /// Default constructor
-  ///
-  explicit Message() = default;
+    private:
+	///
+	/// Internal class type aliases
+	///
+	using Message_body = std::string;
 
-  ///
-  /// Constructor to specify the limit of how many
-  /// fields that can be added to the message
-  ///
-  /// @param limit Capacity of how many fields can
-  /// be added to the message
-  ///
-  explicit Message(const std::size_t limit) noexcept;
+    public:
+	///
+	/// Default constructor
+	///
+	explicit Message() = default;
 
-  ///
-  /// Default copy constructor
-  ///
-  Message(const Message&) = default;
+	///
+	/// Constructor to specify the limit of how many
+	/// fields that can be added to the message
+	///
+	/// @param limit Capacity of how many fields can
+	/// be added to the message
+	///
+	explicit Message(const std::size_t limit) noexcept;
 
-  ///
-  /// Default move constructor
-  ///
-  explicit Message(Message&&) noexcept = default;
+	///
+	/// Default copy constructor
+	///
+	Message(const Message &) = default;
 
-  ///
-  /// Default destructor
-  ///
-  virtual ~Message() noexcept = default;
+	///
+	/// Default move constructor
+	///
+	explicit Message(Message &&) noexcept = default;
 
-  ///
-  /// Default copy assignment operator
-  ///
-  Message& operator = (const Message&) = default;
+	///
+	/// Default destructor
+	///
+	virtual ~Message() noexcept = default;
 
-  ///
-  /// Default move assignment operator
-  ///
-  Message& operator = (Message&&) = default;
+	///
+	/// Default copy assignment operator
+	///
+	Message &operator=(const Message &) = default;
 
-  ///
-  /// Get a modifiable reference to the header object
-  ///
-  Header& header() noexcept;
+	///
+	/// Default move assignment operator
+	///
+	Message &operator=(Message &&) = default;
 
-  ///
-  /// Get a read-only reference to the header object
-  ///
-  const Header& header() const noexcept;
+	///
+	/// Get a modifiable reference to the header object
+	///
+	Header &header() noexcept;
 
-  /**
-   * @brief      Returns the Content-Length value in header as an integer
-   *
-   * @note       Return value 0 can mean its either unset or zero.
-   *
-   * @return     The content length as integer
-   */
-  inline size_t content_length() const;
+	///
+	/// Get a read-only reference to the header object
+	///
+	const Header &header() const noexcept;
 
-  /**
-   * @brief      Sets the Content-Length value in the header
-   *
-   * @param[in]  len   The length of the content
-   *
-   * @return     Outcome of whether the field got updated or not
-   */
-  inline bool set_content_length(size_t len);
+	/**
+     * @brief      Returns the Content-Length value in header as an integer
+     *
+     * @note       Return value 0 can mean its either unset or zero.
+     *
+     * @return     The content length as integer
+     */
+	inline size_t content_length() const;
 
-  ///
-  /// Add an entity to the message
-  ///
-  /// @param message_body The entity to be
-  /// sent with the message
-  ///
-  /// @return The object that invoked this method
-  ///
-  Message& add_body(const Message_body& message_body);
+	/**
+     * @brief      Sets the Content-Length value in the header
+     *
+     * @param[in]  len   The length of the content
+     *
+     * @return     Outcome of whether the field got updated or not
+     */
+	inline bool set_content_length(size_t len);
 
-  ///
-  /// Append a chunk to the entity of the message
-  ///
-  /// @param chunk A chunk to append to the entity
-  ///
-  /// @return The object that invoked this method
-  ///
-  Message& add_chunk(const Message_body& chunk);
+	///
+	/// Add an entity to the message
+	///
+	/// @param message_body The entity to be
+	/// sent with the message
+	///
+	/// @return The object that invoked this method
+	///
+	Message &add_body(const Message_body &message_body);
 
-  ///
-  /// Check if this message has an entity
-  ///
-  /// @return true if entity is present, false
-  /// otherwise
-  ///
-  bool has_body() const noexcept;
+	///
+	/// Append a chunk to the entity of the message
+	///
+	/// @param chunk A chunk to append to the entity
+	///
+	/// @return The object that invoked this method
+	///
+	Message &add_chunk(const Message_body &chunk);
 
-  ///
-  /// Get a view of the entity in this the message if
-  /// present
-  ///
-  /// @return A view of the entity in this message
-  ///
-  util::sview body() const noexcept;
+	///
+	/// Check if this message has an entity
+	///
+	/// @return true if entity is present, false
+	/// otherwise
+	///
+	bool has_body() const noexcept;
 
-  ///
-  /// Remove the entity from the message
-  ///
-  /// @return The object that invoked this method
-  ///
-  Message& clear_body() noexcept;
+	///
+	/// Get a view of the entity in this the message if
+	/// present
+	///
+	/// @return A view of the entity in this message
+	///
+	util::sview body() const noexcept;
 
-  ///
-  /// Reset the message as if it was now default
-  /// constructed
-  ///
-  /// @return The object that invoked this method
-  ///
-  virtual Message& reset() noexcept;
+	///
+	/// Remove the entity from the message
+	///
+	/// @return The object that invoked this method
+	///
+	Message &clear_body() noexcept;
 
-  ///
-  /// Get a string representation of this
-  /// class
-  ///
-  /// @return A string representation
-  ///
-  virtual std::string to_string() const;
+	///
+	/// Reset the message as if it was now default
+	/// constructed
+	///
+	/// @return The object that invoked this method
+	///
+	virtual Message &reset() noexcept;
 
-  ///
-  /// Operator to transform this class
-  /// into string form
-  ///
-  operator std::string () const;
+	///
+	/// Get a string representation of this
+	/// class
+	///
+	/// @return A string representation
+	///
+	virtual std::string to_string() const;
 
-  ///
-  /// Get a view of a buffer holding intermediate information
-  ///
-  /// @return A view of a buffer holding intermediate information
-  ///
-  util::sview private_field() const noexcept;
+	///
+	/// Operator to transform this class
+	/// into string form
+	///
+	operator std::string() const;
 
-  ///
-  /// Set the content of the buffer holding intermediate information
-  ///
-  void set_private_field(const char* base, const size_t length) noexcept;
+	///
+	/// Get a view of a buffer holding intermediate information
+	///
+	/// @return A view of a buffer holding intermediate information
+	///
+	util::sview private_field() const noexcept;
 
-  /**
-   * @brief      Whether the headers are complete or not.
-   *
-   * @return     True if complete, False if not
-   */
-  inline bool headers_complete() const noexcept;
+	///
+	/// Set the content of the buffer holding intermediate information
+	///
+	void set_private_field(const char *base, const size_t length) noexcept;
 
-  /**
-   * @brief      Sets the status whether the headers are complete or not
-   *
-   * @param[in]  complete  Indicates if complete
-   */
-  inline void set_headers_complete(const bool complete) noexcept;
-private:
-  ///
-  /// Class data members
-  ///
-  Header       header_fields_;
-  Message_body message_body_;
-  util::sview  field_;
-  bool         headers_complete_;
+	/**
+     * @brief      Whether the headers are complete or not.
+     *
+     * @return     True if complete, False if not
+     */
+	inline bool headers_complete() const noexcept;
+
+	/**
+     * @brief      Sets the status whether the headers are complete or not
+     *
+     * @param[in]  complete  Indicates if complete
+     */
+	inline void set_headers_complete(const bool complete) noexcept;
+
+    private:
+	///
+	/// Class data members
+	///
+	Header header_fields_;
+	Message_body message_body_;
+	util::sview field_;
+	bool headers_complete_;
 }; //< class Message
 
 /**--v----------- Helper Functions -----------v--**/
@@ -207,29 +209,33 @@ private:
 ///
 /// Add a set of headers to a message
 ///
-Message& operator << (Message& res, const Header_set& headers);
+Message &operator<<(Message &res, const Header_set &headers);
 
 /**--^----------- Helper Functions -----------^--**/
 
 /**--v-------- Inline Implementations --------v--**/
-inline size_t Message::content_length() const {
-  return header_fields_.content_length();
+inline size_t Message::content_length() const
+{
+	return header_fields_.content_length();
 }
 
-inline bool Message::set_content_length(const size_t len) {
-  return header_fields_.set_content_length(len);
+inline bool Message::set_content_length(const size_t len)
+{
+	return header_fields_.set_content_length(len);
 }
 
-inline void Message::set_headers_complete(const bool complete) noexcept {
-  headers_complete_ = complete;
+inline void Message::set_headers_complete(const bool complete) noexcept
+{
+	headers_complete_ = complete;
 }
 
-inline bool Message::headers_complete() const noexcept {
-  return headers_complete_;
+inline bool Message::headers_complete() const noexcept
+{
+	return headers_complete_;
 }
 
 /**--^-------- Inline Implementations --------^--**/
 
-} //< namespace http
+} // namespace http
 
 #endif //< HTTP_MESSAGE_HPP

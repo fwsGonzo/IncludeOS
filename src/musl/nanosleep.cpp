@@ -1,13 +1,14 @@
 #include "common.hpp"
 #include <time.h>
 
-static long sys_nanosleep(const struct timespec */*req*/, struct timespec */*rem*/)
+static long sys_nanosleep(const struct timespec * /*req*/,
+			  struct timespec * /*rem*/)
 {
-  return -ENOSYS;
+	return -ENOSYS;
 }
 
-extern "C"
-long syscall_SYS_nanosleep(const struct timespec *req, struct timespec *rem)
+extern "C" long syscall_SYS_nanosleep(const struct timespec *req,
+				      struct timespec *rem)
 {
-  return strace(sys_nanosleep, "nanosleep", req, rem);
+	return strace(sys_nanosleep, "nanosleep", req, rem);
 }

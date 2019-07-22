@@ -21,175 +21,197 @@
 
 #include "common.hpp"
 
-namespace fs {
+namespace fs
+{
+struct File_system;
 
-  struct File_system;
+/** Generic structure for directory entries */
+struct Dirent {
+	/** Constructor */
+	explicit Dirent(const File_system *fs, const Enttype t = INVALID_ENTITY,
+			const std::string &n = "", const uint64_t blk = 0,
+			const uint64_t pr = 0, const uint64_t sz = 0,
+			const uint32_t attr = 0, const uint32_t modt = 0)
+		: fs_{ fs }, ftype{ t }, fname_{ n }, block_{ blk },
+		  parent_{ pr }, size_{ sz }, attrib_{ attr }, modif{ modt }
+	{
+	}
+	Dirent(const Dirent &) noexcept;
 
-  /** Generic structure for directory entries */
-  struct Dirent {
+	Enttype type() const noexcept
+	{
+		return this->ftype;
+	}
 
-    /** Constructor */
-    explicit Dirent(const File_system* fs,
-                    const Enttype t = INVALID_ENTITY,
-                    const std::string& n = "",
-                    const uint64_t blk   = 0, const uint64_t pr    = 0,
-                    const uint64_t sz    = 0, const uint32_t attr  = 0,
-                    const uint32_t modt = 0)
-      : fs_ {fs}, ftype {t}, fname_ {n},
-        block_ {blk}, parent_ {pr},
-        size_{sz}, attrib_ {attr},
-        modif {modt}
-    {}
-    Dirent(const Dirent&) noexcept;
+	const std::string &name() const noexcept
+	{
+		return this->fname_;
+	}
 
-    Enttype type() const noexcept
-    { return this->ftype; }
+	uint64_t block() const noexcept
+	{
+		return this->block_;
+	}
 
-    const std::string& name() const noexcept
-    { return this->fname_; }
+	uint64_t parent() const noexcept
+	{
+		return this->parent_;
+	}
 
-    uint64_t block() const noexcept
-    { return this->block_; }
+	inline int device_id() const noexcept;
 
-    uint64_t parent() const noexcept
-    { return this->parent_; }
+	uint64_t size() const noexcept
+	{
+		return this->size_;
+	}
 
-    inline int device_id() const noexcept;
+	uint32_t attrib() const noexcept
+	{
+		return this->attrib_;
+	}
 
-    uint64_t size() const noexcept
-    { return this->size_; }
+	// good luck
+	uint64_t modified() const
+	{
+		return this->modif;
+	}
 
-    uint32_t attrib() const noexcept
-    { return this->attrib_; }
+	// true if this dirent is valid
+	// if not, it means don't read any values from the Dirent as they are not
+	bool is_valid() const
+	{
+		return ftype != INVALID_ENTITY;
+	}
 
-    // good luck
-    uint64_t modified() const
-    {
-      return this->modif;
-    }
+	// most common types
+	bool is_file() const noexcept
+	{
+		return ftype == FILE;
+	}
 
+	bool is_dir() const noexcept
+	{
+		return ftype == DIR;
+	}
 
-    // true if this dirent is valid
-    // if not, it means don't read any values from the Dirent as they are not
-    bool is_valid() const
-    { return ftype != INVALID_ENTITY; }
+	// type converted to human-readable string
+	std::string type_string() const
+	{
+		switch (ftype) {
+		case FILE:
+			return "File";
+		case DIR:
+			return "Directory";
+		case VOLUME_ID:
+			return "Volume ID";
 
-    // most common types
-    bool is_file() const noexcept
-    { return ftype == FILE; }
+		case INVALID_ENTITY:
+			return "Invalid entity";
+		default:
+			return "Unknown type";
+		} //< switch (type)
+	}
 
-    bool is_dir() const noexcept
-    { return ftype == DIR; }
+	const File_system &fs() const noexcept
+	{
+		return *fs_;
+	}
 
-    // type converted to human-readable string
-    std::string type_string() const {
-      switch (ftype) {
-      case FILE:
-        return "File";
-      case DIR:
-        return "Directory";
-      case VOLUME_ID:
-        return "Volume ID";
+	/** Read async **/
+	inline void read(uint64_t pos, uint64_t n, on_read_func fn);
 
-      case INVALID_ENTITY:
-        return "Invalid entity";
-      default:
-        return "Unknown type";
-      } //< switch (type)
-    }
+	/** Read the whole file async **/
+	inline void read(on_read_func fn);
 
-    const File_system& fs() const noexcept
-    { return *fs_; }
+	/** Read sync **/
+	inline Buffer read(uint64_t pos, uint64_t n);
 
-    /** Read async **/
-    inline void read(uint64_t pos, uint64_t n, on_read_func fn);
+	/** Read the whole file, sync, to string **/
+	inline std::string read();
 
-    /** Read the whole file async **/
-    inline void read(on_read_func fn);
+	/** List contents async **/
+	inline void ls(on_ls_func fn) const;
 
-    /** Read sync **/
-    inline Buffer read(uint64_t pos, uint64_t n);
+	/** List contents sync **/
+	inline List ls() const;
 
-    /** Read the whole file, sync, to string **/
-    inline std::string read();
+	/** Get a dirent by path, relative to here - async **/
+	template <typename P = std::initializer_list<std::string> >
+	inline void stat(P path, on_stat_func);
 
-    /** List contents async **/
-    inline void ls(on_ls_func fn) const;
+	/** Get a dirent by path, relative to here - sync **/
+	template <typename P = std::initializer_list<std::string> >
+	inline Dirent stat_sync(P path);
 
-    /** List contents sync **/
-    inline List ls() const;
+    private:
+	const File_system *fs_;
+	Enttype ftype;
+	std::string fname_;
+	uint64_t block_;
+	uint64_t parent_; //< Parent's block#
+	uint64_t size_;
+	uint32_t attrib_;
+	uint32_t modif;
+}; //< struct Dirent
 
-    /** Get a dirent by path, relative to here - async **/
-    template <typename P = std::initializer_list<std::string> >
-    inline void stat(P path, on_stat_func);
+} // namespace fs
 
-    /** Get a dirent by path, relative to here - sync **/
-    template <typename P = std::initializer_list<std::string> >
-    inline Dirent stat_sync(P path);
-
-  private:
-    const File_system* fs_;
-    Enttype     ftype;
-    std::string fname_;
-    uint64_t    block_;
-    uint64_t    parent_; //< Parent's block#
-    uint64_t    size_;
-    uint32_t    attrib_;
-    uint32_t    modif;
-  }; //< struct Dirent
-
-} //< namespace fs
-
-  /** Inline Implementations **/
+/** Inline Implementations **/
 
 #include <fs/filesystem.hpp>
 
-namespace fs {
+namespace fs
+{
+int Dirent::device_id() const noexcept
+{
+	return fs_ ? fs_->device_id() : -1;
+}
 
-  int Dirent::device_id() const noexcept
-  { return fs_ ? fs_->device_id() : -1; }
+void Dirent::read(uint64_t pos, uint64_t n, on_read_func fn)
+{
+	fs_->read(*this, pos, n, fn);
+}
 
-  void Dirent::read(uint64_t pos, uint64_t n, on_read_func fn) {
-    fs_->read(*this, pos, n, fn);
-  }
+/** Read the whole file, async **/
+void Dirent::read(on_read_func fn)
+{
+	read(0, size_, fn);
+}
 
-  /** Read the whole file, async **/
-  void Dirent::read(on_read_func fn) {
-    read(0, size_, fn);
-  }
+/** Read sync **/
+Buffer Dirent::read(uint64_t pos, uint64_t n)
+{
+	return fs_->read(*this, pos, n);
+}
 
-  /** Read sync **/
-  Buffer Dirent::read(uint64_t pos, uint64_t n) {
-    return fs_->read(*this, pos, n);
-  }
+/** Read the whole file, sync, to string **/
+std::string Dirent::read()
+{
+	return read(0, size_).to_string();
+}
 
-  /** Read the whole file, sync, to string **/
-  std::string Dirent::read() {
-    return read(0, size_).to_string();
-  }
+/** List contents async **/
+void Dirent::ls(on_ls_func fn) const
+{
+	fs_->ls(*this, fn);
+}
 
+/** List contents sync **/
+List Dirent::ls() const
+{
+	return fs_->ls(*this);
+}
 
-  /** List contents async **/
-  void Dirent::ls(on_ls_func fn) const {
-    fs_->ls(*this, fn);
-  }
+template <typename P> void Dirent::stat(P path, on_stat_func fn)
+{
+	fs_->stat(Path{ path }, fn, this);
+};
 
-  /** List contents sync **/
-  List Dirent::ls() const {
-    return fs_->ls(*this);
-  }
+template <typename P> Dirent Dirent::stat_sync(P path)
+{
+	return fs_->stat(Path{ path }, this);
+};
 
-  template <typename P>
-  void Dirent::stat(P path, on_stat_func fn) {
-    fs_->stat(Path{path}, fn, this);
-  };
-
-  template <typename P>
-  Dirent Dirent::stat_sync(P path) {
-    return fs_->stat(Path{path}, this);
-  };
-
-} //< namespace fs
-
+} // namespace fs
 
 #endif //< FS_DIRENT_HPP

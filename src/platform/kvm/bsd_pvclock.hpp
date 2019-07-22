@@ -27,11 +27,11 @@
  */
 
 /*
-* Scale a 64-bit delta by scaling and multiplying by a 32-bit fraction,
-* yielding a 64-bit result.
-*/
-static inline uint64_t
-pvclock_scale_delta(uint64_t delta, uint32_t mul_frac, int shift)
+ * Scale a 64-bit delta by scaling and multiplying by a 32-bit fraction,
+ * yielding a 64-bit result.
+ */
+static inline uint64_t pvclock_scale_delta(uint64_t delta, uint32_t mul_frac,
+					   int shift)
 {
 	uint64_t product;
 
@@ -45,32 +45,30 @@ pvclock_scale_delta(uint64_t delta, uint32_t mul_frac, int shift)
 		uint32_t tmp1, tmp2;
 
 		/**
-		 * For i386, the formula looks like:
-		 *
-		 *   lower = (mul_frac * (delta & UINT_MAX)) >> 32
-		 *   upper = mul_frac * (delta >> 32)
-		 *   product = lower + upper
-		 */
-		__asm__ (
-			"mul  %5       ; "
+	 * For i386, the formula looks like:
+	 *
+	 *   lower = (mul_frac * (delta & UINT_MAX)) >> 32
+	 *   upper = mul_frac * (delta >> 32)
+	 *   product = lower + upper
+	 */
+		__asm__("mul  %5       ; "
 			"mov  %4,%%eax ; "
 			"mov  %%edx,%4 ; "
 			"mul  %5       ; "
 			"xor  %5,%5    ; "
 			"add  %4,%%eax ; "
 			"adc  %5,%%edx ; "
-			: "=A" (product), "=r" (tmp1), "=r" (tmp2)
-			: "a" ((uint32_t)delta), "1" ((uint32_t)(delta >> 32)),
-			  "2" (mul_frac) );
+			: "=A"(product), "=r"(tmp1), "=r"(tmp2)
+			: "a"((uint32_t)delta), "1"((uint32_t)(delta >> 32)),
+			  "2"(mul_frac));
 	}
 #elif defined(__amd64__)
 	{
 		unsigned long tmp;
 
-		__asm__ (
-			"mulq %[mul_frac] ; shrd $32, %[hi], %[lo]"
-			: [lo]"=a" (product), [hi]"=d" (tmp)
-			: "0" (delta), [mul_frac]"rm"((uint64_t)mul_frac));
+		__asm__("mulq %[mul_frac] ; shrd $32, %[hi], %[lo]"
+			: [lo] "=a"(product), [hi] "=d"(tmp)
+			: "0"(delta), [mul_frac] "rm"((uint64_t)mul_frac));
 	}
 #else
 #error "pvclock: unsupported x86 architecture?"

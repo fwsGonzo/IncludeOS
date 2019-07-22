@@ -3,11 +3,10 @@
 
 static long sys_fchown(int /*fd*/, uid_t /*owner*/, gid_t /*group*/)
 {
-  return -ENOSYS;
+	return -ENOSYS;
 }
 
-extern "C"
-long syscall_SYS_fchown(int fd, uid_t owner, gid_t group)
+extern "C" long syscall_SYS_fchown(int fd, uid_t owner, gid_t group)
 {
-  return strace(sys_fchown, "fchown", fd, owner, group);
+	return strace(sys_fchown, "fchown", fd, owner, group);
 }

@@ -15,83 +15,78 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <service>
+#include <info>
 #include <net/http/basic_client.hpp>
 #include <net/http/server.hpp>
 #include <net/interfaces>
-#include <info>
+#include <service>
 #include <timers>
 
 std::unique_ptr<http::Basic_client> client_;
 std::unique_ptr<http::Server> server_;
 
-void Service::start(const std::string&)
+void Service::start(const std::string &)
 {
-
 }
 
 void Service::ready()
 {
-  auto& inet = net::Interfaces::get(0);
-  inet.network_config(
-    {  10,  0,  0, 46 },  // IP
-    {  255,255,255, 0 },  // Netmask
-    {  10,  0,  0,  1 },  // Gateway
-    {  8,  8,  8,  8 }   // DNS
-  );
+	auto &inet = net::Interfaces::get(0);
+	inet.network_config({ 10, 0, 0, 46 }, // IP
+			    { 255, 255, 255, 0 }, // Netmask
+			    { 10, 0, 0, 1 }, // Gateway
+			    { 8, 8, 8, 8 } // DNS
+	);
 
-  using namespace http;
+	using namespace http;
 
-  INFO("Server", "Testing server");
+	INFO("Server", "Testing server");
 
-  server_ = std::make_unique<Server>(inet.tcp());
+	server_ = std::make_unique<Server>(inet.tcp());
 
-  server_->on_request([] (Request_ptr req, Response_writer_ptr writer)
-  {
-    printf("Received request:\n%s\n", req->to_string().c_str());
-    // set content type
-    writer->header().set_field(header::Content_Type, "text/plain");
-    // write body
-    writer->write("Hello");
-  });
+	server_->on_request([](Request_ptr req, Response_writer_ptr writer) {
+		printf("Received request:\n%s\n", req->to_string().c_str());
+		// set content type
+		writer->header().set_field(header::Content_Type, "text/plain");
+		// write body
+		writer->write("Hello");
+	});
 
-  server_->listen(8080);
+	server_->listen(8080);
 
+	client_ = std::make_unique<Basic_client>(inet.tcp());
+	client_->on_send([](Request &req, Basic_client::Options &opt,
+			    const Basic_client::Host host) {
+		printf("Sending request:\n%s\n", req.to_string().c_str());
+	});
 
-  client_ = std::make_unique<Basic_client>(inet.tcp());
-  client_->on_send([] (Request& req, Basic_client::Options& opt, const Basic_client::Host host)
-  {
-    printf("Sending request:\n%s\n", req.to_string().c_str());
-  });
+	INFO("Basic_client", "HTTPS");
 
-  INFO("Basic_client", "HTTPS");
+	try {
+		client_->get("https://www.google.com", {},
+			     [](Error err, Response_ptr res, Connection &) {});
+		assert(false && "Basic Client should throw exception");
+	} catch (const http::Client_error &err) {
+		CHECKSERT(true,
+			  "Basic Client should throw exception on https URL");
+	}
 
-  try
-  {
-    client_->get("https://www.google.com", {}, [](Error err, Response_ptr res, Connection&) {});
-    assert(false && "Basic Client should throw exception");
-  }
-  catch(const http::Client_error& err)
-  {
-    CHECKSERT(true, "Basic Client should throw exception on https URL");
-  }
+	INFO("Basic_client", "Testing against local server");
 
-  INFO("Basic_client", "Testing against local server");
+	auto req = client_->create_request();
 
-  auto req = client_->create_request();
+	req->set_uri(uri::URI{ "/testing" });
+	client_->send(std::move(req), { inet.gateway(), 9011 },
+		      [](Error err, Response_ptr res, Connection &) {
+			      if (err)
+				      printf("Error: %s \n",
+					     err.to_string().c_str());
 
-  req->set_uri(uri::URI{"/testing"});
-  client_->send(std::move(req), {inet.gateway(), 9011},
-  [] (Error err, Response_ptr res, Connection&)
-  {
-    if (err)
-      printf("Error: %s \n", err.to_string().c_str());
+			      CHECKSERT(!err, "No error");
+			      printf("Received body: %s\n", res->body());
+			      CHECKSERT(res->body() == "/testing",
+					"Received body: \"/testing\"");
 
-    CHECKSERT(!err, "No error");
-    printf("Received body: %s\n", res->body());
-    CHECKSERT(res->body() == "/testing", "Received body: \"/testing\"");
-
-    printf("SUCCESS\n");
-  });
-
+			      printf("SUCCESS\n");
+		      });
 }

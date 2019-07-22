@@ -15,29 +15,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <common>
+#include <net/configure.hpp>
 #include <util/autoconf.hpp>
 #include <util/config.hpp>
-#include <net/configure.hpp>
-#include <common>
 
 void autoconf::run()
 {
-  INFO("Autoconf", "Running auto configure");
+	INFO("Autoconf", "Running auto configure");
 
-  const auto& cfg = Config::get();
+	const auto &cfg = Config::get();
 
-  if(cfg.empty())
-  {
-    INFO2("No config found");
-    return;
-  }
+	if (cfg.empty()) {
+		INFO2("No config found");
+		return;
+	}
 
-  const auto& doc = Config::doc();
-  // Configure network
-  if(doc.HasMember("net"))
-  {
-    net::configure(doc["net"]);
-  }
+	const auto &doc = Config::doc();
+	// Configure network
+	if (doc.HasMember("net")) {
+		net::configure(doc["net"]);
+	}
 
-  INFO("Autoconf", "Finished");
+	INFO("Autoconf", "Finished");
 }

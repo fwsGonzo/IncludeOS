@@ -1,14 +1,13 @@
 #include "common.hpp"
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 static long sys_ftruncate(int /*fd*/, off_t /*length*/)
 {
-  return -EROFS;
+	return -EROFS;
 }
 
-extern "C"
-long syscall_SYS_ftruncate(int fd, off_t length)
+extern "C" long syscall_SYS_ftruncate(int fd, off_t length)
 {
-  return strace(sys_ftruncate, "ftruncate", fd, length);
+	return strace(sys_ftruncate, "ftruncate", fd, length);
 }

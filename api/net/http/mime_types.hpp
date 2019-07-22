@@ -20,8 +20,8 @@
 
 #include "../../util/detail/string_view"
 
-namespace http {
-
+namespace http
+{
 ///
 /// Get the mime type for the specified extension
 ///
@@ -31,6 +31,6 @@ namespace http {
 ///
 util::sview ext_to_mime_type(util::csview extension) noexcept;
 
-} //< namespace http
+} // namespace http
 
 #endif //< HTTP_MIME_TYPES_HPP

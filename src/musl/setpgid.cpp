@@ -4,11 +4,10 @@
 
 long sys_setpgid(pid_t /*pid*/, gid_t /*gid*/)
 {
-  return -ENOSYS;
+	return -ENOSYS;
 }
 
-extern "C"
-long syscall_SYS_setpgid(pid_t pid, gid_t gid)
+extern "C" long syscall_SYS_setpgid(pid_t pid, gid_t gid)
 {
-  return strace(sys_setpgid, "setpgid", pid, gid);
+	return strace(sys_setpgid, "setpgid", pid, gid);
 }

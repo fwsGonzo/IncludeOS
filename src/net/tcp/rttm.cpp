@@ -51,16 +51,14 @@ constexpr float RTTM::beta;
 */
 void RTTM::rtt_measurement(milliseconds R)
 {
-  if(samples > 0)
-  {
-    RTTVAR = seconds{(1 - beta) * RTTVAR.count() + beta * std::abs((SRTT - R).count())};
-    SRTT = (1 - alpha) * SRTT + alpha * R;
-  }
-  else
-  {
-    SRTT = R;
-    RTTVAR = R/2;
-  }
-  ++samples;
-  update_rto();
+	if (samples > 0) {
+		RTTVAR = seconds{ (1 - beta) * RTTVAR.count() +
+				  beta * std::abs((SRTT - R).count()) };
+		SRTT = (1 - alpha) * SRTT + alpha * R;
+	} else {
+		SRTT = R;
+		RTTVAR = R / 2;
+	}
+	++samples;
+	update_rto();
 }

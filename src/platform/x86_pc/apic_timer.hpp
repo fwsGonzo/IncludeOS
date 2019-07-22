@@ -22,20 +22,19 @@
 
 #include <chrono>
 
-namespace x86 {
-
-struct APIC_Timer
+namespace x86
 {
-  static void init();
-  static void calibrate();
-  static void start_timers() noexcept;
+struct APIC_Timer {
+	static void init();
+	static void calibrate();
+	static void start_timers() noexcept;
 
-  static bool ready() noexcept;
+	static bool ready() noexcept;
 
-  static void oneshot(std::chrono::nanoseconds) noexcept;
-  static void stop() noexcept;
+	static void oneshot(std::chrono::nanoseconds) noexcept;
+	static void stop() noexcept;
 };
 
-}
+} // namespace x86
 
 #endif

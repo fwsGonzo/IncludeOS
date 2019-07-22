@@ -17,8 +17,7 @@
 
 #include <os.hpp>
 
-__attribute__((constructor))
-static void enable_timestamps()
+__attribute__((constructor)) static void enable_timestamps()
 {
-  os::print_timestamps(true);
+	os::print_timestamps(true);
 }

@@ -1,13 +1,11 @@
 #include "common.hpp"
 
-long sys_setrlimit(int /*resource*/, const struct rlimit* /*rlim*/)
+long sys_setrlimit(int /*resource*/, const struct rlimit * /*rlim*/)
 {
-  return -ENOSYS;
+	return -ENOSYS;
 }
 
-extern "C"
-long syscall_SYS_setrlimit(int resource,
-               const struct rlimit* rlim)
+extern "C" long syscall_SYS_setrlimit(int resource, const struct rlimit *rlim)
 {
-  return strace(sys_setrlimit, "setrlimit", resource, rlim);
+	return strace(sys_setrlimit, "setrlimit", resource, rlim);
 }

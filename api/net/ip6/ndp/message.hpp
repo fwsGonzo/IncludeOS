@@ -18,127 +18,123 @@
 
 #include "options.hpp"
 
-namespace net::ndp {
+namespace net::ndp
+{
+template <typename M> struct View : public M {
+	using Message = M;
+	uint8_t options[0];
 
-  template <typename M>
-  struct View : public M
-  {
-    using Message = M;
-    uint8_t options[0];
+	View() = default;
+	View(Message &&args) : Message{ args }
+	{
+	}
 
-    View() = default;
-    View(Message&& args)
-      : Message{args}
-    {}
+	/** Invoked with a const pointer of an "anonymous" option. */
+	using Option_inspector = delegate<void(const option::Base *)>;
 
+	uint8_t parse_options(const uint8_t *end,
+			      Option_inspector on_option) const
+	{
+		Expects(on_option);
+		uint8_t n = 0;
 
-    /** Invoked with a const pointer of an "anonymous" option. */
-    using Option_inspector = delegate<void(const option::Base*)>;
+		const auto *raw = reinterpret_cast<const uint8_t *>(options);
+		const auto *opt = reinterpret_cast<const option::Base *>(raw);
 
-    uint8_t parse_options(const uint8_t* end, Option_inspector on_option) const
-    {
-      Expects(on_option);
-      uint8_t n = 0;
+		while (opt->type != option::END and raw < end) {
+			// no options can have zero size
+			if (UNLIKELY(opt->size() == 0))
+				break;
+			// can't parse an option we don't have the room to read
+			if (UNLIKELY(raw + opt->size() > end))
+				break;
 
-      const auto* raw = reinterpret_cast<const uint8_t*>(options);
-      const auto* opt = reinterpret_cast<const option::Base*>(raw);
+			++n;
+			on_option(opt);
+			raw += opt->size();
+			opt = reinterpret_cast<const option::Base *>(raw);
+		}
 
-      while(opt->type != option::END and raw < end)
-      {
-        // no options can have zero size
-        if (UNLIKELY(opt->size() == 0)) break;
-        // can't parse an option we don't have the room to read
-        if (UNLIKELY(raw + opt->size() > end)) break;
+		return n;
+	}
 
-        ++n;
-        on_option(opt);
-        raw += opt->size();
-        opt = reinterpret_cast<const option::Base*>(raw);
-      }
+	template <typename Opt, typename... Args>
+	Opt *add_option(size_t offset, Args &&... args) noexcept
+	{
+		auto *opt =
+			new (&options[offset]) Opt(std::forward<Args>(args)...);
+		return opt;
+	}
+};
 
-      return n;
-    }
+struct Router_sol {
+	const uint32_t reserved{ 0x0 };
 
-    template <typename Opt, typename... Args>
-    Opt* add_option(size_t offset, Args&&... args) noexcept
-    {
-      auto* opt = new (&options[offset]) Opt(std::forward<Args>(args)...);
-      return opt;
-    }
-  };
+} __attribute__((packed));
+static_assert(sizeof(Router_sol) == 4);
 
-  struct Router_sol
-  {
-    const uint32_t reserved{0x0};
+struct Router_adv {
+	uint8_t cur_hop_limit;
+	uint8_t man_addr_conf : 1, other_conf : 1, home_agent : 1, prf : 2,
+		proxy : 1, reserved : 2;
+	uint16_t router_lifetime;
+	uint32_t reachable_time;
+	uint32_t retrans_time;
 
-  } __attribute__((packed));
-  static_assert(sizeof(Router_sol) == 4);
+} __attribute__((packed));
+static_assert(sizeof(Router_adv) == 12);
 
-  struct Router_adv
-  {
-    uint8_t   cur_hop_limit;
-    uint8_t   man_addr_conf:1,
-              other_conf:1,
-              home_agent:1,
-              prf:2,
-              proxy:1,
-              reserved:2;
-    uint16_t  router_lifetime;
-    uint32_t  reachable_time;
-    uint32_t  retrans_time;
+struct Router_redirect {
+	ip6::Addr target;
+	ip6::Addr dest;
 
-  } __attribute__((packed));
-  static_assert(sizeof(Router_adv) == 12);
+} __attribute__((packed));
 
-  struct Router_redirect
-  {
-    ip6::Addr target;
-    ip6::Addr dest;
+struct Neighbor_sol {
+	const uint32_t reserved{ 0x0 };
+	ip6::Addr target;
 
-  } __attribute__((packed));
+	Neighbor_sol() = default;
+	Neighbor_sol(ip6::Addr tar) : target{ std::move(tar) }
+	{
+	}
 
-  struct Neighbor_sol
-  {
-    const uint32_t reserved{0x0};
-    ip6::Addr target;
+} __attribute__((packed));
+static_assert(sizeof(Neighbor_sol) == 20);
 
-    Neighbor_sol() = default;
-    Neighbor_sol(ip6::Addr tar)
-      : target{std::move(tar)}
-    {}
+struct Neighbor_adv {
+	enum Flag : uint8_t {
+		Router = 0b1000'0000, Solicited = 0b0100'0000, Override = 0b0010'0000
+	};
 
-  } __attribute__((packed));
-  static_assert(sizeof(Neighbor_sol) == 20);
+	uint32_t flags{ 0x0 };
+	ip6::Addr target;
 
-  struct Neighbor_adv
-  {
-    enum Flag : uint8_t
-    {
-      Router    = 0b1000'0000,
-      Solicited = 0b0100'0000,
-      Override  = 0b0010'0000
-    };
+	Neighbor_adv() = default;
+	Neighbor_adv(ip6::Addr tar) : target{ std::move(tar) }
+	{
+	}
 
-    uint32_t flags{0x0};
-    ip6::Addr target;
+	void set_flag(uint8_t flag) noexcept
+	{
+		flags |= flag;
+	}
 
-    Neighbor_adv() = default;
-    Neighbor_adv(ip6::Addr tar)
-      : target{std::move(tar)}
-    {}
+	constexpr bool router() const noexcept
+	{
+		return flags & Router;
+	}
 
-    void set_flag(uint8_t flag) noexcept
-    { flags |= flag; }
+	constexpr bool solicited() const noexcept
+	{
+		return flags & Solicited;
+	}
 
-    constexpr bool router() const noexcept
-    { return flags & Router; }
+	constexpr bool override() const noexcept
+	{
+		return flags & Override;
+	}
 
-    constexpr bool solicited() const noexcept
-    { return flags & Solicited; }
-
-    constexpr bool override() const noexcept
-    { return flags & Override; }
-
-  } __attribute__((packed));
-  static_assert(sizeof(Neighbor_adv) == 20);
-}
+} __attribute__((packed));
+static_assert(sizeof(Neighbor_adv) == 20);
+} // namespace net::ndp

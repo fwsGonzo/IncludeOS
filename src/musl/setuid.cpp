@@ -4,11 +4,10 @@
 
 long sys_setuid(uid_t /*uid*/)
 {
-  return -ENOSYS;
+	return -ENOSYS;
 }
 
-extern "C"
-long syscall_SYS_setuid(uid_t uid)
+extern "C" long syscall_SYS_setuid(uid_t uid)
 {
-  return strace(sys_setuid, "setuid", uid);
+	return strace(sys_setuid, "setuid", uid);
 }

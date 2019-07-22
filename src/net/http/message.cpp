@@ -17,95 +17,111 @@
 
 #include <net/http/message.hpp>
 
-namespace http {
-
+namespace http
+{
 ///////////////////////////////////////////////////////////////////////////////
-Message::Message(const std::size_t limit) noexcept
-  : header_fields_{limit}, headers_complete_{false}
-{}
-
-///////////////////////////////////////////////////////////////////////////////
-Header& Message::header() noexcept {
-  return header_fields_;
+Message::Message(const std::size_t limit) noexcept : header_fields_{ limit },
+						     headers_complete_{ false }
+{
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-const Header& Message::header() const noexcept {
-  return header_fields_;
+Header &Message::header() noexcept
+{
+	return header_fields_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Message& Message::add_body(const Message_body& message_body) {
-  if (message_body.empty()) return *this;
-  message_body_ = message_body;
-  return *this;
+const Header &Message::header() const noexcept
+{
+	return header_fields_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Message& Message::add_chunk(const std::string& chunk) {
-  if (chunk.empty()) return *this;
-  message_body_.append(chunk);
-  return *this;
+Message &Message::add_body(const Message_body &message_body)
+{
+	if (message_body.empty())
+		return *this;
+	message_body_ = message_body;
+	return *this;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-bool Message::has_body() const noexcept {
-  return not message_body_.empty();
+Message &Message::add_chunk(const std::string &chunk)
+{
+	if (chunk.empty())
+		return *this;
+	message_body_.append(chunk);
+	return *this;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-util::sview Message::body() const noexcept {
-  return message_body_;
+bool Message::has_body() const noexcept
+{
+	return not message_body_.empty();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Message& Message::clear_body() noexcept {
-  message_body_.clear();
-  return *this;
+util::sview Message::body() const noexcept
+{
+	return message_body_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Message& Message::reset() noexcept {
-  header().clear();
-  return clear_body();
+Message &Message::clear_body() noexcept
+{
+	message_body_.clear();
+	return *this;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-std::string Message::to_string() const {
-  std::ostringstream message;
-  //-----------------------------------
-  message << header_fields_
-          << message_body_;
-  //-----------------------------------
-  return message.str();
+Message &Message::reset() noexcept
+{
+	header().clear();
+	return clear_body();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Message::operator std::string () const {
-  return to_string();
+std::string Message::to_string() const
+{
+	std::ostringstream message;
+	//-----------------------------------
+	message << header_fields_ << message_body_;
+	//-----------------------------------
+	return message.str();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-util::sview Message::private_field() const noexcept {
-  return field_;
+Message::operator std::string() const
+{
+	return to_string();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void Message::set_private_field(const char* base, const size_t length) noexcept {
-  field_ = {base, length};
+util::sview Message::private_field() const noexcept
+{
+	return field_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Message& operator << (Message& message, const Header_set& headers) {
-  for (const auto& field : headers) {
-    message.header().add_field(field.first, field.second);
-  }
-  return message;
+void Message::set_private_field(const char *base, const size_t length) noexcept
+{
+	field_ = { base, length };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-std::ostream& operator << (std::ostream& output_device, const Message& message) {
-  return output_device << message.to_string();
+Message &operator<<(Message &message, const Header_set &headers)
+{
+	for (const auto &field : headers) {
+		message.header().add_field(field.first, field.second);
+	}
+	return message;
 }
 
-} //< namespace http
+///////////////////////////////////////////////////////////////////////////////
+std::ostream &operator<<(std::ostream &output_device, const Message &message)
+{
+	return output_device << message.to_string();
+}
+
+} // namespace http

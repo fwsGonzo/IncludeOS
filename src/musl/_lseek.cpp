@@ -2,10 +2,10 @@
 
 static long sys__lseek()
 {
-  return -ENOSYS;
+	return -ENOSYS;
 }
 
-extern "C"
-long syscall_SYS__lseek() {
-  return stubtrace(sys__lseek, "_lseek");
+extern "C" long syscall_SYS__lseek()
+{
+	return stubtrace(sys__lseek, "_lseek");
 }

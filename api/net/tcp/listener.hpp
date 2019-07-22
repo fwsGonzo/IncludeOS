@@ -27,89 +27,96 @@
 
 #include <net/socket.hpp>
 
-namespace net {
-  class TCP;
-namespace tcp {
+namespace net
+{
+class TCP;
+namespace tcp
+{
+	class Listener {
+	    public:
+		using AcceptCallback = delegate<bool(Socket)>;
+		using ConnectCallback = Connection::ConnectCallback;
+		using CloseCallback = delegate<void(Listener &)>;
+		using CleanupCallback = Connection::CleanupCallback;
 
-class Listener {
-public:
-  using AcceptCallback       = delegate<bool(Socket)>;
-  using ConnectCallback      = Connection::ConnectCallback;
-  using CloseCallback        = delegate<void(Listener&)>;
-  using CleanupCallback      = Connection::CleanupCallback;
+		using SynQueue = std::deque<Connection_ptr>;
 
-  using SynQueue = std::deque<Connection_ptr>;
+	    public:
+		Listener(TCP &host, Socket local, ConnectCallback cb = nullptr,
+			 const bool ipv6_only = false);
 
-public:
+		Listener &on_accept(AcceptCallback cb)
+		{
+			on_accept_ = cb;
+			return *this;
+		}
 
-  Listener(TCP& host, Socket local, ConnectCallback cb = nullptr,
-           const bool ipv6_only = false);
+		Listener &on_connect(ConnectCallback cb)
+		{
+			on_connect_ = cb;
+			return *this;
+		}
 
-  Listener& on_accept(AcceptCallback cb)
-  {
-    on_accept_ = cb;
-    return *this;
-  }
+		bool syn_queue_full() const;
 
-  Listener& on_connect(ConnectCallback cb)
-  {
-    on_connect_ = cb;
-    return *this;
-  }
+		/**
+	 * @brief Returns the local socket identified with this Listener
+	 *
+	 * @return The local Socket the listener is bound to
+	 */
+		const Socket &local() const noexcept
+		{
+			return local_;
+		}
 
-  bool syn_queue_full() const;
+		port_t port() const noexcept
+		{
+			return local_.port();
+		}
 
-  /**
-   * @brief Returns the local socket identified with this Listener
-   *
-   * @return The local Socket the listener is bound to
-   */
-  const Socket& local() const noexcept
-  { return local_; }
+		auto syn_queue_size() const
+		{
+			return syn_queue_.size();
+		}
 
-  port_t port() const noexcept
-  { return local_.port(); }
+		const SynQueue &syn_queue() const
+		{
+			return syn_queue_;
+		}
 
-  auto syn_queue_size() const
-  { return syn_queue_.size(); }
+		std::string to_string() const;
 
-  const SynQueue& syn_queue() const
-  { return syn_queue_; }
+		void close();
 
-  std::string to_string() const;
+		/** Delete copy and move constructors.*/
+		Listener(Listener &) = delete;
+		Listener(Listener &&) = delete;
 
-  void close();
+		/** Delete copy and move assignment operators.*/
+		Listener &operator=(Listener) = delete;
+		Listener operator=(Listener &&) = delete;
 
-  /** Delete copy and move constructors.*/
-  Listener(Listener&) = delete;
-  Listener(Listener&&) = delete;
+	    private:
+		friend class net::TCP;
+		TCP &host_;
+		Socket local_;
+		SynQueue syn_queue_;
 
-  /** Delete copy and move assignment operators.*/
-  Listener& operator=(Listener) = delete;
-  Listener operator=(Listener&&) = delete;
+		AcceptCallback on_accept_;
+		ConnectCallback on_connect_;
+		CloseCallback _on_close_;
+		const bool ipv6_only_;
 
-private:
-  friend class net::TCP;
-  TCP&      host_;
-  Socket    local_;
-  SynQueue  syn_queue_;
+		bool default_on_accept(Socket);
 
-  AcceptCallback  on_accept_;
-  ConnectCallback on_connect_;
-  CloseCallback   _on_close_;
-  const bool      ipv6_only_;
+		void segment_arrived(Packet_view &);
 
-  bool default_on_accept(Socket);
+		void remove(const Connection *);
 
-  void segment_arrived(Packet_view&);
+		void connected(Connection_ptr);
+	};
 
-  void remove(const Connection*);
-
-  void connected(Connection_ptr);
-
-};
-
-} // < namespace tcp
-} // < namespace net
+} // namespace tcp
+} // namespace net
 
 #endif // < NET_TCP_LISTENER_HPP

@@ -15,111 +15,112 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <util/logger.hpp>
 #include <common>
+#include <util/logger.hpp>
 
-Logger::Logger(Log& log, Log::index_type pos)
-: log_(log), pos_{&log_, pos}
+Logger::Logger(Log &log, Log::index_type pos) : log_(log), pos_{ &log_, pos }
 {
 }
 
-void Logger::log(const std::string& str) {
+void Logger::log(const std::string &str)
+{
+	if (UNLIKELY(str.empty()))
+		return;
 
-  if(UNLIKELY( str.empty() ))
-    return;
+	if (UNLIKELY(str.size() + 1 >= (unsigned)log_.size())) {
+		// start at the beginning
+		pos_ = { &log_, 0 };
+		// calculate offset (with padding)
+		auto offset = str.size() + 1 - log_.size();
+		// copy later part into position
+		std::copy(str.begin() + offset, str.end(), pos_);
+		// increment position to know where to put padding
+		pos_ += str.size() - offset;
+		*pos_ = '\0';
+		// return to the beginning
+		++pos_;
+		return;
+	}
 
-  if(UNLIKELY( str.size() + 1 >= (unsigned)log_.size() ))
-  {
-    // start at the beginning
-    pos_ = {&log_, 0};
-    // calculate offset (with padding)
-    auto offset = str.size() + 1 - log_.size();
-    // copy later part into position
-    std::copy(str.begin() + offset, str.end(), pos_);
-    // increment position to know where to put padding
-    pos_ += str.size() - offset;
-    *pos_ = '\0';
-    // return to the beginning
-    ++pos_;
-    return;
-  }
+	std::copy(str.begin(), str.end(), pos_);
+	pos_ += str.size();
 
-  std::copy(str.begin(), str.end(), pos_);
-  pos_ += str.size();
-
-  // add null terminate padding
-  auto it = pos_;
-  while(*it != '\0') {
-    *it = '\0';
-    ++it;
-  }
-  ++pos_;
+	// add null terminate padding
+	auto it = pos_;
+	while (*it != '\0') {
+		*it = '\0';
+		++it;
+	}
+	++pos_;
 }
 
-std::vector<std::string> Logger::entries() const {
-  std::vector<std::string> results;
+std::vector<std::string> Logger::entries() const
+{
+	std::vector<std::string> results;
 
-  auto head = pos_;
+	auto head = pos_;
 
-  do {
-    // adjust head
-    while(*head == '\0') {
-      ++head;
-      // return results if we went all the way around
-      if(head == pos_)
-        return results;
-    }
+	do {
+		// adjust head
+		while (*head == '\0') {
+			++head;
+			// return results if we went all the way around
+			if (head == pos_)
+				return results;
+		}
 
-    std::vector<char> vec;
+		std::vector<char> vec;
 
-    while(*head != '\0') {
-      vec.emplace_back(*head);
-      ++head;
-    }
+		while (*head != '\0') {
+			vec.emplace_back(*head);
+			++head;
+		}
 
-    results.emplace_back(vec.begin(), vec.end());
+		results.emplace_back(vec.begin(), vec.end());
 
-  } while(true);
+	} while (true);
 
-  return results;
+	return results;
 }
 
-std::vector<std::string> Logger::entries(size_t n) const {
-  std::vector<std::string> results;
+std::vector<std::string> Logger::entries(size_t n) const
+{
+	std::vector<std::string> results;
 
-  results.reserve(n);
+	results.reserve(n);
 
-  auto head = pos_;
+	auto head = pos_;
 
-  while(n != 0) {
-    // adjust head
-    while(*head == '\0') {
-      --head;
-      // return results if we went all the way around
-      if(head == pos_)
-        return results;
-    }
-    // temporary string
-    std::vector<char> vec;
-    do {
-      // build the string from back to front
-      vec.emplace_back(*head);
-      --head;
-    } while(*head != '\0');
+	while (n != 0) {
+		// adjust head
+		while (*head == '\0') {
+			--head;
+			// return results if we went all the way around
+			if (head == pos_)
+				return results;
+		}
+		// temporary string
+		std::vector<char> vec;
+		do {
+			// build the string from back to front
+			vec.emplace_back(*head);
+			--head;
+		} while (*head != '\0');
 
-    // emplace the string in reverese
-    results.emplace_back(vec.rbegin(), vec.rend());
-    // decrement remaining entries
-    n--;
-  }
+		// emplace the string in reverese
+		results.emplace_back(vec.rbegin(), vec.rend());
+		// decrement remaining entries
+		n--;
+	}
 
-  // reverese all the results so it became oldest first
-  std::reverse(results.begin(), results.end());
+	// reverese all the results so it became oldest first
+	std::reverse(results.begin(), results.end());
 
-  return results;
+	return results;
 }
 
-void Logger::flush() {
-  std::fill(log_.begin(), log_.end(), 0);
-  pos_ = {&log_, 0};
+void Logger::flush()
+{
+	std::fill(log_.begin(), log_.end(), 0);
+	pos_ = { &log_, 0 };
 }

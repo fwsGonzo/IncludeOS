@@ -3,12 +3,12 @@
 
 static long sys_sched_yield()
 {
-    THPRINT("sched_yield() called on thread %ld\n", kernel::get_tid());
-    __thread_yield();
-    return 0;
+	THPRINT("sched_yield() called on thread %ld\n", kernel::get_tid());
+	__thread_yield();
+	return 0;
 }
 
-extern "C"
-long syscall_SYS_sched_yield() {
-  return strace(sys_sched_yield, "sched_yield");
+extern "C" long syscall_SYS_sched_yield()
+{
+	return strace(sys_sched_yield, "sched_yield");
 }

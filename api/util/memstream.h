@@ -6,9 +6,9 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,8 @@
 #include <stdint.h>
 
 #define SSE_SIZE 16
-#define SSE_ALIGNED __attribute__ (( aligned (SSE_SIZE) ))
-#define SSE_VALIDATE(buffer) (((intptr_t) buffer & (SSE_SIZE-1)) == 0)
+#define SSE_ALIGNED __attribute__((aligned(SSE_SIZE)))
+#define SSE_VALIDATE(buffer) (((intptr_t)buffer & (SSE_SIZE - 1)) == 0)
 
 /**
  * Copy from aligned block of memory
@@ -34,7 +34,7 @@
  * 
  * Returns a pointer to the memory area dest + n.
 **/
-extern void* streamcpy(void* dest, const void* src, size_t n);
+extern void *streamcpy(void *dest, const void *src, size_t n);
 
 /**
  * Copy from unaligned block of memory
@@ -45,7 +45,7 @@ extern void* streamcpy(void* dest, const void* src, size_t n);
  * 
  * Returns a pointer to the memory area dest + n.
 **/
-extern void* streamucpy(void* dest, const void* usrc, size_t n);
+extern void *streamucpy(void *dest, const void *usrc, size_t n);
 
 /**
  * Fill memory with a constant byte value
@@ -55,7 +55,7 @@ extern void* streamucpy(void* dest, const void* usrc, size_t n);
  * 
  * Returns a pointer to the memory area dest + n.
 **/
-extern void* streamset8(void* dest, int8_t value, size_t n);
+extern void *streamset8(void *dest, int8_t value, size_t n);
 #define streamset(x, y, z) streamset8(x, y, z)
 
 /**
@@ -67,7 +67,7 @@ extern void* streamset8(void* dest, int8_t value, size_t n);
  * 
  * Returns a pointer to the memory area dest + n.
 **/
-extern void* streamset16(void* dest, int16_t value, size_t n);
-extern void* streamset32(void* dest, int32_t value, size_t n);
+extern void *streamset16(void *dest, int16_t value, size_t n);
+extern void *streamset32(void *dest, int32_t value, size_t n);
 
 #endif

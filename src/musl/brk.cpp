@@ -1,53 +1,52 @@
 #include "common.hpp"
-#include <string.h>
-#include <os.hpp>
 #include <errno.h>
 #include <kprint>
+#include <os.hpp>
+#include <string.h>
 
-static uintptr_t brk_begin        = 0;
-static uintptr_t brk_current_end  = 0;
-static uintptr_t brk_initialized  = 0;
-static ssize_t   brk_max          = 0;
-
+static uintptr_t brk_begin = 0;
+static uintptr_t brk_current_end = 0;
+static uintptr_t brk_initialized = 0;
+static ssize_t brk_max = 0;
 
 uintptr_t __init_brk(uintptr_t begin, size_t size)
 {
-  brk_begin = begin;
-  brk_current_end = begin;
-  brk_max   = size;
-  brk_initialized = brk_current_end;
-  return brk_begin + brk_max;
+	brk_begin = begin;
+	brk_current_end = begin;
+	brk_max = size;
+	brk_initialized = brk_current_end;
+	return brk_begin + brk_max;
 }
 
-
-size_t brk_bytes_used() {
-  return brk_current_end - brk_begin;
-}
-
-size_t brk_bytes_free() {
-  return brk_max - brk_bytes_used();
-}
-
-static uintptr_t sys_brk(void* addr)
+size_t brk_bytes_used()
 {
-  if (addr == nullptr
-      or (uintptr_t)addr > brk_begin +  brk_max
-      or (uintptr_t)addr < brk_begin) {
-    return brk_current_end;
-  }
-
-  brk_current_end = (uintptr_t)addr;
-
-  if (brk_current_end > brk_initialized) {
-    memset((void*)brk_initialized, 0, brk_current_end - brk_initialized);
-    brk_initialized = brk_current_end;
-  }
-
-  return brk_current_end;
+	return brk_current_end - brk_begin;
 }
 
-extern "C"
-uintptr_t syscall_SYS_brk(void* addr)
+size_t brk_bytes_free()
 {
-  return strace(sys_brk, "brk", addr);
+	return brk_max - brk_bytes_used();
+}
+
+static uintptr_t sys_brk(void *addr)
+{
+	if (addr == nullptr or (uintptr_t) addr > brk_begin + brk_max or
+	    (uintptr_t) addr < brk_begin) {
+		return brk_current_end;
+	}
+
+	brk_current_end = (uintptr_t)addr;
+
+	if (brk_current_end > brk_initialized) {
+		memset((void *)brk_initialized, 0,
+		       brk_current_end - brk_initialized);
+		brk_initialized = brk_current_end;
+	}
+
+	return brk_current_end;
+}
+
+extern "C" uintptr_t syscall_SYS_brk(void *addr)
+{
+	return strace(sys_brk, "brk", addr);
 }

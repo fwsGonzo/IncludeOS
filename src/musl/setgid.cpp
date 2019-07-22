@@ -4,11 +4,10 @@
 
 long sys_setgid(gid_t /*gid*/)
 {
-  return -ENOSYS;
+	return -ENOSYS;
 }
 
-extern "C"
-long syscall_SYS_setgid(gid_t gid)
+extern "C" long syscall_SYS_setgid(gid_t gid)
 {
-  return strace(sys_setgid, "setgid", gid);
+	return strace(sys_setgid, "setgid", gid);
 }

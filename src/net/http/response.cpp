@@ -18,143 +18,163 @@
 #include <http-parser/http_parser.h>
 #include <net/http/response.hpp>
 
-namespace http {
-
+namespace http
+{
 ///
 /// Configure the settings for parsing a response
 ///
 static http_parser_settings settings;
 
-__attribute__((constructor))
-static void riegfjeriugfjreiougf()
+__attribute__((constructor)) static void riegfjeriugfjreiougf()
 {
-  settings.on_header_field = [](http_parser* parser, const char* at, size_t length) {
-    auto res = reinterpret_cast<Response*>(parser->data);
-    res->set_private_field(at, length);
-    return 0;
-  };
+	settings.on_header_field = [](http_parser *parser, const char *at,
+				      size_t length) {
+		auto res = reinterpret_cast<Response *>(parser->data);
+		res->set_private_field(at, length);
+		return 0;
+	};
 
-  settings.on_header_value = [](http_parser* parser, const char* at, size_t length) {
-    auto res = reinterpret_cast<Response*>(parser->data);
-    res->header().set_field(std::string(res->private_field()), {at, length});
-    return 0;
-  };
+	settings.on_header_value = [](http_parser *parser, const char *at,
+				      size_t length) {
+		auto res = reinterpret_cast<Response *>(parser->data);
+		res->header().set_field(std::string(res->private_field()),
+					{ at, length });
+		return 0;
+	};
 
-  settings.on_body = [](http_parser* parser, const char* at, size_t length) {
-    auto res = reinterpret_cast<Response*>(parser->data);
-    res->add_chunk({at, length});
-    return 0;
-  };
+	settings.on_body = [](http_parser *parser, const char *at,
+			      size_t length) {
+		auto res = reinterpret_cast<Response *>(parser->data);
+		res->add_chunk({ at, length });
+		return 0;
+	};
 
-  settings.on_headers_complete = [](http_parser* parser) {
-    auto res = reinterpret_cast<Response*>(parser->data);
-    res->set_version(Version{parser->http_major, parser->http_minor});
-    res->set_status_code(static_cast<status_t>(parser->status_code));
-    res->set_headers_complete(true);
-    return 0;
-  };
+	settings.on_headers_complete = [](http_parser *parser) {
+		auto res = reinterpret_cast<Response *>(parser->data);
+		res->set_version(
+			Version{ parser->http_major, parser->http_minor });
+		res->set_status_code(
+			static_cast<status_t>(parser->status_code));
+		res->set_headers_complete(true);
+		return 0;
+	};
 };
 
 ///
 /// Function to parse the response data
 ///
-static size_t parse_response(Response*, const std::string&) noexcept;
+static size_t parse_response(Response *, const std::string &) noexcept;
 
 ///////////////////////////////////////////////////////////////////////////////
 Response::Response(const Version version, const status_t status_code) noexcept
-  : code_{status_code}
-  , version_{version}
-{}
-
-///////////////////////////////////////////////////////////////////////////////
-Response::Response(std::string response, const std::size_t limit, const bool parse)
-  : Message{limit}
-  , response_{std::move(response)}
+	: code_{ status_code },
+	  version_{ version }
 {
-  if (parse) this->parse();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Response& Response::parse() {
-  if (parse_response(this, response_) not_eq response_.length()) {
-    throw Response_error{"Invalid response: " + response_};
-  }
-
-  return *this;
+Response::Response(std::string response, const std::size_t limit,
+		   const bool parse)
+	: Message{ limit }, response_{ std::move(response) }
+{
+	if (parse)
+		this->parse();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-status_t Response::status_code() const noexcept {
-  return code_;
+Response &Response::parse()
+{
+	if (parse_response(this, response_) not_eq response_.length()) {
+		throw Response_error{ "Invalid response: " + response_ };
+	}
+
+	return *this;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Response& Response::set_status_code(const status_t status_code) noexcept {
-  code_ = status_code;
-  return *this;
+status_t Response::status_code() const noexcept
+{
+	return code_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-const Version Response::version() const noexcept {
-  return version_;
+Response &Response::set_status_code(const status_t status_code) noexcept
+{
+	code_ = status_code;
+	return *this;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Response& Response::set_version(const Version version) noexcept {
-  version_ = version;
-  return *this;
+const Version Response::version() const noexcept
+{
+	return version_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-std::string Response::status_line() const noexcept {
-  std::ostringstream status_line;
-  //-----------------------------------
-  status_line << version_ << " " << code_ << " "
-              << code_description(code_);
-  //-----------------------------------
-  return status_line.str();
+Response &Response::set_version(const Version version) noexcept
+{
+	version_ = version;
+	return *this;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Response& Response::reset() noexcept {
-  response_.clear();
-  return soft_reset();
+std::string Response::status_line() const noexcept
+{
+	std::ostringstream status_line;
+	//-----------------------------------
+	status_line << version_ << " " << code_ << " "
+		    << code_description(code_);
+	//-----------------------------------
+	return status_line.str();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-std::string Response::to_string() const {
-  std::ostringstream response;
-  //-----------------------------------
-  response << version_ << " " << code_ << " "
-           << code_description(code_)  << "\r\n"
-           << Message::to_string();
-  //-----------------------------------
-  return response.str();
+Response &Response::reset() noexcept
+{
+	response_.clear();
+	return soft_reset();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Response::operator std::string () const {
-  return to_string();
+std::string Response::to_string() const
+{
+	std::ostringstream response;
+	//-----------------------------------
+	response << version_ << " " << code_ << " " << code_description(code_)
+		 << "\r\n"
+		 << Message::to_string();
+	//-----------------------------------
+	return response.str();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-static size_t parse_response(Response* res, const std::string& data) noexcept {
-  http_parser parser;
-  http_parser_init(&parser, HTTP_RESPONSE);
-  parser.data = res;
-  return http_parser_execute(&parser, &settings, data.data(), data.size());
+Response::operator std::string() const
+{
+	return to_string();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Response& Response::operator << (const std::string& chunk) {
-  response_.append(chunk);
-  return *this;
+static size_t parse_response(Response *res, const std::string &data) noexcept
+{
+	http_parser parser;
+	http_parser_init(&parser, HTTP_RESPONSE);
+	parser.data = res;
+	return http_parser_execute(&parser, &settings, data.data(),
+				   data.size());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-Response& Response::soft_reset() noexcept {
-  Message::reset();
-  return set_status_code(OK);
+Response &Response::operator<<(const std::string &chunk)
+{
+	response_.append(chunk);
+	return *this;
 }
 
-} //< namespace http
+///////////////////////////////////////////////////////////////////////////////
+Response &Response::soft_reset() noexcept
+{
+	Message::reset();
+	return set_status_code(OK);
+}
+
+} // namespace http

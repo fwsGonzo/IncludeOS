@@ -29,8 +29,8 @@
 
 #include "../../util/detail/string_view"
 
-namespace http {
-
+namespace http
+{
 ///
 /// This class is used to store header information
 /// associated with an http message
@@ -40,188 +40,194 @@ namespace http {
 /// appropriate constructor
 ///
 class Header {
-private:
-  ///
-  /// Internal class type aliases
-  ///
-  using Const_iterator = Header_set::const_iterator;
-public:
-  ///
-  /// Default constructor that limits the amount
-  /// of fields that can be added to 25
-  ///
-  explicit Header();
+    private:
+	///
+	/// Internal class type aliases
+	///
+	using Const_iterator = Header_set::const_iterator;
 
-  ///
-  /// Constructor to specify the limit of how many
-  /// fields that can be added
-  ///
-  /// @param limit Capacity of how many fields can
-  /// be added
-  ///
-  explicit Header(const std::size_t limit);
+    public:
+	///
+	/// Default constructor that limits the amount
+	/// of fields that can be added to 25
+	///
+	explicit Header();
 
-  ///
-  /// Default destructor
-  ///
-  ~Header() noexcept = default;
+	///
+	/// Constructor to specify the limit of how many
+	/// fields that can be added
+	///
+	/// @param limit Capacity of how many fields can
+	/// be added
+	///
+	explicit Header(const std::size_t limit);
 
-  ///
-  /// Default copy constructor
-  ///
-  Header(const Header&) = default;
+	///
+	/// Default destructor
+	///
+	~Header() noexcept = default;
 
-  ///
-  /// Default move constructor
-  ///
-  Header(Header&&) noexcept = default;
+	///
+	/// Default copy constructor
+	///
+	Header(const Header &) = default;
 
-  ///
-  /// Default assignment operator
-  ///
-  Header& operator = (const Header&) = default;
+	///
+	/// Default move constructor
+	///
+	Header(Header &&) noexcept = default;
 
-  ///
-  /// Default move assignemt operator
-  ///
-  Header& operator = (Header&&) noexcept = default;
+	///
+	/// Default assignment operator
+	///
+	Header &operator=(const Header &) = default;
 
-  ///
-  /// Add a new field to the current set
-  ///
-  /// @param field The field name
-  /// @param value The field value
-  ///
-  /// @return true if the field was added, false
-  /// otherwise
-  ///
-  bool add_field(std::string field, std::string value);
+	///
+	/// Default move assignemt operator
+	///
+	Header &operator=(Header &&) noexcept = default;
 
-  ///
-  /// Change the value of the specified field
-  ///
-  /// If the field is absent from the set it will
-  /// be added with the associated value once its
-  /// within capacity
-  ///
-  /// @param field The field name
-  /// @param value The field value
-  ///
-  /// @return true if successful, false otherwise
-  ///
-  bool set_field(std::string field, std::string value);
+	///
+	/// Add a new field to the current set
+	///
+	/// @param field The field name
+	/// @param value The field value
+	///
+	/// @return true if the field was added, false
+	/// otherwise
+	///
+	bool add_field(std::string field, std::string value);
 
-  ///
-  /// Check to see if the specified field is a
-  /// member of the set
-  ///
-  /// @param field The field name
-  ///
-  /// @return true if the field is a member,
-  /// false otherwise
-  ///
-  bool has_field(util::csview field) const noexcept;
+	///
+	/// Change the value of the specified field
+	///
+	/// If the field is absent from the set it will
+	/// be added with the associated value once its
+	/// within capacity
+	///
+	/// @param field The field name
+	/// @param value The field value
+	///
+	/// @return true if successful, false otherwise
+	///
+	bool set_field(std::string field, std::string value);
 
-  ///
-  /// Get the value associated with a field
-  ///
-  /// @param field The field name
-  ///
-  /// @return The value associated with the specified field name, empty
-  /// view otherwise
-  ///
-  ///
-  util::sview value(util::csview field) const noexcept;
+	///
+	/// Check to see if the specified field is a
+	/// member of the set
+	///
+	/// @param field The field name
+	///
+	/// @return true if the field is a member,
+	/// false otherwise
+	///
+	bool has_field(util::csview field) const noexcept;
 
-  ///
-  /// Check to see if the set is empty
-  ///
-  /// @return true if there are no fields within
-  /// the set, false otherwise
-  ///
-  bool is_empty() const noexcept;
+	///
+	/// Get the value associated with a field
+	///
+	/// @param field The field name
+	///
+	/// @return The value associated with the specified field name, empty
+	/// view otherwise
+	///
+	///
+	util::sview value(util::csview field) const noexcept;
 
-  ///
-  /// Check to see how many fields are currently
-  /// in the set
-  ///
-  /// @return The amount of fields currently in
-  /// the set
-  ///
-  std::size_t size() const noexcept;
+	///
+	/// Check to see if the set is empty
+	///
+	/// @return true if there are no fields within
+	/// the set, false otherwise
+	///
+	bool is_empty() const noexcept;
 
-  ///
-  /// Remove all fields from the set with the
-  /// specified name
-  ///
-  /// @param field The field name to remove
-  ///
-  void erase(util::csview field) noexcept;
+	///
+	/// Check to see how many fields are currently
+	/// in the set
+	///
+	/// @return The amount of fields currently in
+	/// the set
+	///
+	std::size_t size() const noexcept;
 
-  ///
-  /// Remove all fields from the set leaving it
-  /// empty
-  ///
-  void clear() noexcept;
+	///
+	/// Remove all fields from the set with the
+	/// specified name
+	///
+	/// @param field The field name to remove
+	///
+	void erase(util::csview field) noexcept;
 
-  ///
-  /// Returns the Content-Length value in header as an integer
-  ///
-  /// @note Return value 0 can mean its either unset or zero.
-  ///
-  /// @return The content length as integer
-  ///
-  size_t content_length() const noexcept;
+	///
+	/// Remove all fields from the set leaving it
+	/// empty
+	///
+	void clear() noexcept;
 
-  ///
-  /// Sets the Content-Length value in the header
-  ///
-  /// @param len The length of the content
-  ///
-  /// @return Outcome of whether the field got updated or not
-  ///
-  bool set_content_length(const size_t len);
+	///
+	/// Returns the Content-Length value in header as an integer
+	///
+	/// @note Return value 0 can mean its either unset or zero.
+	///
+	/// @return The content length as integer
+	///
+	size_t content_length() const noexcept;
 
-private:
-  ///
-  /// Class data members
-  ///
-  Header_set fields_;
+	///
+	/// Sets the Content-Length value in the header
+	///
+	/// @param len The length of the content
+	///
+	/// @return Outcome of whether the field got updated or not
+	///
+	bool set_content_length(const size_t len);
 
-  ///
-  /// Find the location of a field within the set
-  ///
-  /// @param field The field name to locate
-  ///
-  /// @return Iterator to the location of the field,
-  /// else location to the end of the sequence
-  ///
-  Const_iterator find(util::csview field) const noexcept;
+    private:
+	///
+	/// Class data members
+	///
+	Header_set fields_;
 
-  ///
-  /// Operator to stream the contents of the set
-  /// into the specified output device
-  ///
-  /// The format is as follows:
-  /// field : value "\r\n"
-  ///
-  template<typename Char, typename Char_traits>
-  friend std::basic_ostream<Char, Char_traits>& operator<<(std::basic_ostream<Char, Char_traits>& output_device, const Header& header);
+	///
+	/// Find the location of a field within the set
+	///
+	/// @param field The field name to locate
+	///
+	/// @return Iterator to the location of the field,
+	/// else location to the end of the sequence
+	///
+	Const_iterator find(util::csview field) const noexcept;
+
+	///
+	/// Operator to stream the contents of the set
+	/// into the specified output device
+	///
+	/// The format is as follows:
+	/// field : value "\r\n"
+	///
+	template <typename Char, typename Char_traits>
+	friend std::basic_ostream<Char, Char_traits> &
+	operator<<(std::basic_ostream<Char, Char_traits> &output_device,
+		   const Header &header);
 }; //< class Header
 
-template<typename Char, typename Char_traits>
-std::basic_ostream<Char, Char_traits>& operator<<(std::basic_ostream<Char, Char_traits>& output_device, const Header& header) {
-  if (not header.is_empty()) {
-    for (const auto field : header.fields_) {
-      output_device << field.first  << ": "
-                    << field.second << "\r\n";
-    }
-    //-----------------------------------
-    output_device << "\r\n";
-  }
-  return output_device;
+template <typename Char, typename Char_traits>
+std::basic_ostream<Char, Char_traits> &
+operator<<(std::basic_ostream<Char, Char_traits> &output_device,
+	   const Header &header)
+{
+	if (not header.is_empty()) {
+		for (const auto field : header.fields_) {
+			output_device << field.first << ": " << field.second
+				      << "\r\n";
+		}
+		//-----------------------------------
+		output_device << "\r\n";
+	}
+	return output_device;
 }
 
-} //< namespace http
+} // namespace http
 
 #endif //< HTTP_HEADER_HPP

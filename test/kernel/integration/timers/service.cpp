@@ -15,16 +15,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cassert>
 #include <os>
 #include <stdio.h>
-#include <cassert>
 
 void Service::start()
 {
 }
 void Service::ready()
 {
-  INFO("Timers", "Testing APIC timers");
-  extern void test_timers();
-  test_timers();
+	INFO("Timers", "Testing APIC timers");
+	extern void test_timers();
+	test_timers();
 }

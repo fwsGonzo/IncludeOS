@@ -4,11 +4,10 @@
 
 long sys_setsid()
 {
-  return 0;
+	return 0;
 }
 
-extern "C"
-long syscall_SYS_setsid()
+extern "C" long syscall_SYS_setsid()
 {
-  return strace(sys_setsid, "setsid");
+	return strace(sys_setsid, "setsid");
 }

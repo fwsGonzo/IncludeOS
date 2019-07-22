@@ -27,7 +27,7 @@
 // https://howardhinnant.github.io/short_alloc.h
 
 struct Fixed_storage_error : public std::runtime_error {
-  using runtime_error::runtime_error;
+	using runtime_error::runtime_error;
 };
 
 /**
@@ -39,101 +39,116 @@ struct Fixed_storage_error : public std::runtime_error {
  * @tparam     N          Number of objects that can be stored
  * @tparam     alignment  Pointer alignment
  */
-template <typename T, std::size_t N, std::size_t alignment = alignof(std::ptrdiff_t)>
+template <typename T, std::size_t N,
+	  std::size_t alignment = alignof(std::ptrdiff_t)>
 class Fixed_storage {
-public:
-  static constexpr std::size_t aligned_size() noexcept
-  { return (sizeof(T) + (alignment-1)) & ~(alignment-1); }
+    public:
+	static constexpr std::size_t aligned_size() noexcept
+	{
+		return (sizeof(T) + (alignment - 1)) & ~(alignment - 1);
+	}
 
-  static constexpr std::size_t buffer_size() noexcept
-  { return N * aligned_size(); }
+	static constexpr std::size_t buffer_size() noexcept
+	{
+		return N * aligned_size();
+	}
 
-private:
-  alignas(alignment) std::array<char, buffer_size()> buf_;
-  /** Available addresses */
-  Fixed_vector<char*, N> free_;
+    private:
+	alignas(alignment) std::array<char, buffer_size()> buf_;
+	/** Available addresses */
+	Fixed_vector<char *, N> free_;
 
-public:
-  Fixed_storage() noexcept;
+    public:
+	Fixed_storage() noexcept;
 
-  Fixed_storage(const Fixed_storage&) = delete;
-  Fixed_storage(Fixed_storage&&) = delete;
-  Fixed_storage& operator=(const Fixed_storage&) = delete;
-  Fixed_storage& operator=(Fixed_storage&&) = delete;
+	Fixed_storage(const Fixed_storage &) = delete;
+	Fixed_storage(Fixed_storage &&) = delete;
+	Fixed_storage &operator=(const Fixed_storage &) = delete;
+	Fixed_storage &operator=(Fixed_storage &&) = delete;
 
-  template <std::size_t ReqAlign> char* allocate(std::size_t n);
-  void deallocate(char* p, std::size_t n) noexcept;
+	template <std::size_t ReqAlign> char *allocate(std::size_t n);
+	void deallocate(char *p, std::size_t n) noexcept;
 
-  static constexpr std::size_t size() noexcept
-  { return N; }
+	static constexpr std::size_t size() noexcept
+	{
+		return N;
+	}
 
-  std::size_t used() const noexcept
-  { return buffer_size() - available(); }
+	std::size_t used() const noexcept
+	{
+		return buffer_size() - available();
+	}
 
-  std::size_t available() const noexcept
-  { return (free_.size() * aligned_size()); }
+	std::size_t available() const noexcept
+	{
+		return (free_.size() * aligned_size());
+	}
 
-  void reset() noexcept;
+	void reset() noexcept;
 
-private:
-  constexpr const char* end() const noexcept
-  { return &buf_[buffer_size()]; }
+    private:
+	constexpr const char *end() const noexcept
+	{
+		return &buf_[buffer_size()];
+	}
 
-  bool pointer_in_buffer(char* p) const noexcept
-  { return buf_.data() <= p && p <= end(); }
+	bool pointer_in_buffer(char *p) const noexcept
+	{
+		return buf_.data() <= p && p <= end();
+	}
 
 }; // < class Fixed_storage
 
 template <typename T, std::size_t N, std::size_t alignment>
 Fixed_storage<T, N, alignment>::Fixed_storage() noexcept
 {
-  //printf("Fixed_storage<%s, %u, %u> aligned_size: %u\n",
-  //  typeid(T).name(), N, alignment, aligned_size());
-  reset();
+	// printf("Fixed_storage<%s, %u, %u> aligned_size: %u\n",
+	//  typeid(T).name(), N, alignment, aligned_size());
+	reset();
 }
 
 template <typename T, std::size_t N, std::size_t alignment>
 template <std::size_t ReqAlign>
-char* Fixed_storage<T, N, alignment>::allocate(std::size_t n)
+char *Fixed_storage<T, N, alignment>::allocate(std::size_t n)
 {
-  static_assert(ReqAlign <= alignment,
-    "Alignment is too small for this storage");
+	static_assert(ReqAlign <= alignment,
+		      "Alignment is too small for this storage");
 
-  Expects(n == sizeof(T) &&
-    "Allocating more than sizeof(T) not supported");
+	Expects(n == sizeof(T) &&
+		"Allocating more than sizeof(T) not supported");
 
-  if(UNLIKELY(free_.empty()))
-    throw Fixed_storage_error{
-      "Fixed_storage_error: Storage exhausted (all addresses in use)"};
+	if (UNLIKELY(free_.empty()))
+		throw Fixed_storage_error{
+			"Fixed_storage_error: Storage exhausted (all addresses in use)"
+		};
 
-  return free_.pop_back();
+	return free_.pop_back();
 }
 
 template <typename T, std::size_t N, std::size_t alignment>
-void Fixed_storage<T, N, alignment>::deallocate(char* p, std::size_t) noexcept
+void Fixed_storage<T, N, alignment>::deallocate(char *p, std::size_t) noexcept
 {
-  //printf("Fixed_storage<%s, %u, %u> dealloc %p\n",
-  //  typeid(T).name(), N, alignment, p);
+	// printf("Fixed_storage<%s, %u, %u> dealloc %p\n",
+	//  typeid(T).name(), N, alignment, p);
 
-  Expects(pointer_in_buffer(p) &&
-    "Trying to deallocate pointer outside my buffer");
+	Expects(pointer_in_buffer(p) &&
+		"Trying to deallocate pointer outside my buffer");
 
-  free_.push_back(p);
+	free_.push_back(p);
 
-  Ensures(free_.size() <= N);
+	Ensures(free_.size() <= N);
 }
 
 template <typename T, std::size_t N, std::size_t alignment>
 void Fixed_storage<T, N, alignment>::reset() noexcept
 {
-  auto* ptr = &buf_[N * aligned_size()];
-  while(ptr > buf_.data())
-  {
-    ptr -= aligned_size();
-    free_.push_back(ptr);
-  }
+	auto *ptr = &buf_[N * aligned_size()];
+	while (ptr > buf_.data()) {
+		ptr -= aligned_size();
+		free_.push_back(ptr);
+	}
 
-  Ensures(free_.size() == N);
+	Ensures(free_.size() == N);
 }
 
 #endif

@@ -20,17 +20,17 @@
 #define X86_SMP_HPP
 
 #include <cstdint>
-#include <vector>
 #include <smp>
+#include <vector>
 
 typedef SMP::task_func smp_task_func;
 typedef SMP::done_func smp_done_func;
 
-namespace x86 {
-
+namespace x86
+{
 extern void init_SMP();
 extern void initialize_gdt_for_cpu(int cpuid);
 
-}
+} // namespace x86
 
 #endif

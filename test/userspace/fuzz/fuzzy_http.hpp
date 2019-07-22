@@ -22,31 +22,35 @@
 
 #include <net/http/server.hpp>
 
-namespace fuzzy {
-
-class HTTP_server : public http::Server
+namespace fuzzy
 {
-public:
-  template <typename... Server_args>
-  inline HTTP_server(
-      net::TCP&   tcp,
-      Server_args&&... server_args)
-    : Server{tcp, std::forward<Server>(server_args)...}
-  {}
-  virtual ~HTTP_server() {}
+class HTTP_server : public http::Server {
+    public:
+	template <typename... Server_args>
+	inline HTTP_server(net::TCP &tcp, Server_args &&... server_args)
+		: Server{ tcp, std::forward<Server>(server_args)... }
+	{
+	}
+	virtual ~HTTP_server()
+	{
+	}
 
-  inline void add(net::Stream_ptr);
+	inline void add(net::Stream_ptr);
 
-private:
-  void bind(const uint16_t) override {}
-  void on_connect(TCP_conn) override {}
+    private:
+	void bind(const uint16_t) override
+	{
+	}
+	void on_connect(TCP_conn) override
+	{
+	}
 };
 
 inline void HTTP_server::add(net::Stream_ptr stream)
 {
-  this->connect(std::move(stream));
+	this->connect(std::move(stream));
 }
 
-} // < namespace http
+} // namespace fuzzy
 
 #endif

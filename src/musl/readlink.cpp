@@ -1,14 +1,14 @@
 #include "common.hpp"
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
 
-static long sys_readlink(const char* /*path*/, char* /*buf*/, size_t /*bufsiz*/)
+static long sys_readlink(const char * /*path*/, char * /*buf*/,
+			 size_t /*bufsiz*/)
 {
-  return -EIO;
+	return -EIO;
 }
 
-extern "C"
-long syscall_SYS_readlink(const char *path, char *buf, size_t bufsiz)
+extern "C" long syscall_SYS_readlink(const char *path, char *buf, size_t bufsiz)
 {
-  return strace(sys_readlink, "readlink", path, buf, bufsiz);
+	return strace(sys_readlink, "readlink", path, buf, bufsiz);
 }

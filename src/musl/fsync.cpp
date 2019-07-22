@@ -3,11 +3,10 @@
 
 static long sys_fsync(int /*fd*/)
 {
-  return -EROFS;
+	return -EROFS;
 }
 
-extern "C"
-long syscall_SYS_fsync(int fd)
+extern "C" long syscall_SYS_fsync(int fd)
 {
-  return strace(sys_fsync, "fsync", fd);
+	return strace(sys_fsync, "fsync", fd);
 }

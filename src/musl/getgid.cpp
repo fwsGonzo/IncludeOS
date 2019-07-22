@@ -3,11 +3,10 @@
 
 static long sys_getgid()
 {
-  return 0;
+	return 0;
 }
 
-extern "C"
-long syscall_SYS_getgid()
+extern "C" long syscall_SYS_getgid()
 {
-  return strace(sys_getgid, "getgid");
+	return strace(sys_getgid, "getgid");
 }
